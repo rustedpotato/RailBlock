@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.task import MaintenanceTaskResponse
 
 
@@ -29,8 +29,7 @@ class ScheduledMaintenanceResponse(BaseModel):
     task_title: Optional[str] = None
     department: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UnscheduledTaskResponse(BaseModel):
@@ -43,8 +42,7 @@ class UnscheduledTaskResponse(BaseModel):
     task_title: Optional[str] = None
     department: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MaintenancePlanResponse(BaseModel):
@@ -67,8 +65,7 @@ class MaintenancePlanResponse(BaseModel):
     scheduled_tasks: List[ScheduledMaintenanceResponse] = []
     unscheduled_tasks: List[UnscheduledTaskResponse] = []
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ConflictDetail(BaseModel):

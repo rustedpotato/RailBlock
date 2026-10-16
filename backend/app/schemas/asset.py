@@ -1,6 +1,6 @@
 from typing import Optional
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AvailabilityStatusEnum(str, Enum):
@@ -29,5 +29,4 @@ class AssetCreate(AssetBase):
 class AssetResponse(AssetBase):
     id: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
