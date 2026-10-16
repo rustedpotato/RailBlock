@@ -54,7 +54,8 @@ class ScheduleValidator:
         tasks_map: Dict[str, Any],
         windows_map: Dict[str, Any],
         trains: List[Any],
-        safety_buffer_minutes: Optional[int] = None
+        safety_buffer_minutes: Optional[int] = None,
+        allow_joint_maintenance: bool = True
     ) -> ValidationReport:
         """
         Independently audits all scheduled maintenance tasks in a plan.
@@ -190,9 +191,13 @@ class ScheduleValidator:
                 if corr_a == corr_b:
                     # Check time overlap: max(start_a, start_b) < min(end_a, end_b)
                     if max(start_a, start_b) < min(end_a, end_b):
-                        # If tasks are from the same department, overlapping is forbidden
-                        # If from different departments, they might be compatible only if designated joint
                         is_same_dept = (dept_a == dept_b)
+                        is_same_window = (item_a.get("block_window_id") == item_b.get("block_window_id"))
+                        # If joint maintenance is permitted, different departments in the same block window
+                        # constitute an authorized coordinated Joint Mega-Block
+                        if allow_joint_maintenance and not is_same_dept and is_same_window:
+                            continue
+
                         severity = "CRITICAL" if is_same_dept else "HIGH"
                         conflicts.append(ConflictDetail(
                             conflict_type="OVERLAPPING_MAINTENANCE",

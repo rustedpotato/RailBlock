@@ -26,6 +26,12 @@ class OrToolsScheduler:
     def __init__(self, priority_engine=None):
         self.priority_engine = priority_engine or default_priority_engine
 
+    def _val(self, obj: Any, key: str, default: Any = None) -> Any:
+        if isinstance(obj, dict):
+            return obj.get(key, default)
+        val = getattr(obj, key, None)
+        return default if val is None else val
+
     def _ensure_utc(self, dt: datetime) -> datetime:
         if dt.tzinfo is None:
             return dt.replace(tzinfo=timezone.utc)
@@ -81,12 +87,12 @@ class OrToolsScheduler:
         # Pre-compute priority score for each task if not already scored
         scored_tasks = []
         for t in tasks:
-            t_id = getattr(t, "id", None) or t["id"]
-            crit = getattr(t, "criticality", None) or t.get("criticality", 3)
-            urg = getattr(t, "urgency", None) or t.get("urgency", 3)
-            overdue = getattr(t, "overdue_days", None) or t.get("overdue_days", 0)
-            dept = getattr(t, "department", None) or t.get("department", "ENGINEERING")
-            dur = getattr(t, "duration_minutes", None) or t.get("duration_minutes", 60)
+            t_id = self._val(t, "id")
+            crit = self._val(t, "criticality", 3)
+            urg = self._val(t, "urgency", 3)
+            overdue = self._val(t, "overdue_days", 0)
+            dept = self._val(t, "department", "ENGINEERING")
+            dur = self._val(t, "duration_minutes", 60)
 
             score_res = self.priority_engine.calculate_priority(
                 criticality=crit,
@@ -121,19 +127,19 @@ class OrToolsScheduler:
         for st in scored_tasks:
             t = st["task"]
             t_id = st["task_id"]
-            t_corr = getattr(t, "corridor_id", None) or t.get("corridor_id")
-            t_dur = getattr(t, "duration_minutes", None) or t.get("duration_minutes")
-            t_earliest = self._ensure_utc(getattr(t, "earliest_start", None) or t.get("earliest_start"))
-            t_deadline = self._ensure_utc(getattr(t, "deadline", None) or t.get("deadline"))
-            t_dept = getattr(t, "department", None) or t.get("department")
+            t_corr = self._val(t, "corridor_id")
+            t_dur = self._val(t, "duration_minutes")
+            t_earliest = self._ensure_utc(self._val(t, "earliest_start"))
+            t_deadline = self._ensure_utc(self._val(t, "deadline"))
+            t_dept = self._val(t, "department")
 
             for w in windows:
-                w_id = getattr(w, "id", None) or w.get("id")
-                w_corr = getattr(w, "corridor_id", None) or w.get("corridor_id")
-                w_cap = getattr(w, "available_capacity_minutes", None) or w.get("available_capacity_minutes")
-                w_start = self._ensure_utc(getattr(w, "start_time", None) or w.get("start_time"))
-                w_end = self._ensure_utc(getattr(w, "end_time", None) or w.get("end_time"))
-                w_restr = getattr(w, "department_restrictions", None) or w.get("department_restrictions")
+                w_id = self._val(w, "id")
+                w_corr = self._val(w, "corridor_id")
+                w_cap = self._val(w, "available_capacity_minutes")
+                w_start = self._ensure_utc(self._val(w, "start_time"))
+                w_end = self._ensure_utc(self._val(w, "end_time"))
+                w_restr = self._val(w, "department_restrictions")
 
                 # Check 1: Corridor match
                 if t_corr != w_corr:
@@ -189,14 +195,14 @@ class OrToolsScheduler:
 
         # Constraint 2: Total duration assigned in each window <= available capacity
         for w in windows:
-            w_id = getattr(w, "id", None) or w.get("id")
-            w_cap = getattr(w, "available_capacity_minutes", None) or w.get("available_capacity_minutes")
+            w_id = self._val(w, "id")
+            w_cap = self._val(w, "available_capacity_minutes")
             
             window_task_terms = []
             for st in scored_tasks:
                 t_id = st["task_id"]
                 if (t_id, w_id) in x:
-                    t_dur = getattr(st["task"], "duration_minutes", None) or st["task"].get("duration_minutes")
+                    t_dur = self._val(st["task"], "duration_minutes")
                     window_task_terms.append(t_dur * x[(t_id, w_id)])
 
             if window_task_terms:
@@ -204,7 +210,7 @@ class OrToolsScheduler:
 
         # Constraint 3: Non-overlapping maintenance tasks on the same corridor/window
         for w in windows:
-            w_id = getattr(w, "id", None) or w.get("id")
+            w_id = self._val(w, "id")
             
             if not allow_joint_maintenance:
                 # No tasks can overlap within the same block window
@@ -217,13 +223,13 @@ class OrToolsScheduler:
                     model.AddNoOverlap(w_intervals)
             else:
                 # Same department tasks cannot overlap; different departments can share
-                depts = set(getattr(st["task"], "department", None) or st["task"].get("department") for st in scored_tasks)
+                depts = set(self._val(st["task"], "department") for st in scored_tasks)
                 for dept in depts:
                     dept_intervals = [
                         task_intervals[(st["task_id"], w_id)]
                         for st in scored_tasks
                         if (st["task_id"], w_id) in task_intervals and
-                        (getattr(st["task"], "department", None) or st["task"].get("department")) == dept
+                        self._val(st["task"], "department") == dept
                     ]
                     if len(dept_intervals) > 1:
                         model.AddNoOverlap(dept_intervals)
@@ -231,21 +237,21 @@ class OrToolsScheduler:
         # Constraint 4: Avoid train timetable intervals + safety buffer
         buffer_delta = timedelta(minutes=safety_buffer_minutes)
         for w in windows:
-            w_id = getattr(w, "id", None) or w.get("id")
-            w_corr = getattr(w, "corridor_id", None) or w.get("corridor_id")
-            w_start = self._ensure_utc(getattr(w, "start_time", None) or w.get("start_time"))
-            w_end = self._ensure_utc(getattr(w, "end_time", None) or w.get("end_time"))
+            w_id = self._val(w, "id")
+            w_corr = self._val(w, "corridor_id")
+            w_start = self._ensure_utc(self._val(w, "start_time"))
+            w_end = self._ensure_utc(self._val(w, "end_time"))
 
             # Relevant trains traversing this corridor during or near this window
             corridor_trains = [
                 trn for trn in trains
-                if (getattr(trn, "corridor_id", None) or trn.get("corridor_id")) == w_corr
+                if self._val(trn, "corridor_id") == w_corr
             ]
 
             for trn in corridor_trains:
-                trn_num = getattr(trn, "train_number", None) or trn.get("train_number")
-                trn_start = self._ensure_utc(getattr(trn, "scheduled_start", None) or trn.get("scheduled_start"))
-                trn_end = self._ensure_utc(getattr(trn, "scheduled_end", None) or trn.get("scheduled_end"))
+                trn_num = self._val(trn, "train_number")
+                trn_start = self._ensure_utc(self._val(trn, "scheduled_start"))
+                trn_end = self._ensure_utc(self._val(trn, "scheduled_end"))
 
                 blocked_start = trn_start - buffer_delta
                 blocked_end = trn_end + buffer_delta
@@ -300,10 +306,10 @@ class OrToolsScheduler:
             for st in scored_tasks:
                 t = st["task"]
                 t_id = st["task_id"]
-                t_dur = getattr(t, "duration_minutes", None) or t.get("duration_minutes")
-                t_corr = getattr(t, "corridor_id", None) or t.get("corridor_id")
-                t_title = getattr(t, "title", None) or t.get("title", f"Task {t_id}")
-                t_dept = getattr(t, "department", None) or t.get("department")
+                t_dur = self._val(t, "duration_minutes")
+                t_corr = self._val(t, "corridor_id")
+                t_title = self._val(t, "title", f"Task {t_id}")
+                t_dept = self._val(t, "department")
 
                 for w_id in task_feasible_windows[t_id]:
                     if (t_id, w_id) in x and solver.Value(x[(t_id, w_id)]) == 1:
@@ -341,17 +347,17 @@ class OrToolsScheduler:
             t_id = st["task_id"]
             if t_id not in scheduled_task_ids:
                 t = st["task"]
-                t_corr = getattr(t, "corridor_id", None) or t.get("corridor_id")
-                t_dur = getattr(t, "duration_minutes", None) or t.get("duration_minutes")
-                t_earliest = self._ensure_utc(getattr(t, "earliest_start", None) or t.get("earliest_start"))
-                t_deadline = self._ensure_utc(getattr(t, "deadline", None) or t.get("deadline"))
-                t_title = getattr(t, "title", None) or t.get("title", f"Task {t_id}")
-                t_dept = getattr(t, "department", None) or t.get("department")
+                t_corr = self._val(t, "corridor_id")
+                t_dur = self._val(t, "duration_minutes")
+                t_earliest = self._ensure_utc(self._val(t, "earliest_start"))
+                t_deadline = self._ensure_utc(self._val(t, "deadline"))
+                t_title = self._val(t, "title", f"Task {t_id}")
+                t_dept = self._val(t, "department")
 
                 # Run step-by-step diagnostic
                 corridor_windows = [
                     w for w in windows
-                    if (getattr(w, "corridor_id", None) or w.get("corridor_id")) == t_corr
+                    if self._val(w, "corridor_id") == t_corr
                 ]
 
                 reason = ""
@@ -361,11 +367,11 @@ class OrToolsScheduler:
                     reason = f"No block windows registered for corridor {t_corr}."
                     details = "Corridor has zero active block windows in the current planning period."
                 elif not any(
-                    (getattr(w, "available_capacity_minutes", None) or w.get("available_capacity_minutes")) >= t_dur
+                    self._val(w, "available_capacity_minutes", 0) >= t_dur
                     for w in corridor_windows
                 ):
                     max_cap = max(
-                        getattr(w, "available_capacity_minutes", None) or w.get("available_capacity_minutes")
+                        self._val(w, "available_capacity_minutes", 0)
                         for w in corridor_windows
                     )
                     reason = f"Insufficient window capacity: task requires {t_dur} min, max available is {max_cap} min."
@@ -388,15 +394,16 @@ class OrToolsScheduler:
 
         # Calculate overall block capacity utilization
         total_window_capacity = sum(
-            getattr(w, "available_capacity_minutes", None) or w.get("available_capacity_minutes", 0)
+            self._val(w, "available_capacity_minutes", 0)
             for w in windows
         )
         utilization = round((total_maintenance_minutes / total_window_capacity * 100.0), 2) if total_window_capacity > 0 else 0.0
 
+        tasks_map = {st["task_id"]: st["task"] for st in scored_tasks}
         overdue_high_priority_covered = sum(
             1 for s in scheduled_results
-            if (getattr(tasks_map.get(s["task_id"]), "overdue_days", 0) if (tasks_map := {st["task_id"]: st["task"] for st in scored_tasks}) else 0) > 0
-            and (getattr(tasks_map.get(s["task_id"]), "criticality", 0) if tasks_map else 0) >= 4
+            if self._val(tasks_map.get(s["task_id"]), "overdue_days", 0) > 0
+            and self._val(tasks_map.get(s["task_id"]), "criticality", 0) >= 4
         )
 
         return {
