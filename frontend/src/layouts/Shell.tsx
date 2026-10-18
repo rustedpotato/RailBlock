@@ -20,7 +20,9 @@ import {
   ChevronDown,
   Check,
   Layers,
-  Sparkles
+  Sparkles,
+  Menu,
+  X
 } from 'lucide-react';
 import { useLine } from '../context/LineContext';
 import { LINES, getLine, LineId } from '../data/lines';
@@ -45,6 +47,7 @@ export const Shell: React.FC<ShellProps> = ({
   const { theme, setTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLineMenu, setShowLineMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { selectedLine, setSelectedLine } = useLine();
   const activeLine = getLine(selectedLine);
@@ -409,22 +412,29 @@ export const Shell: React.FC<ShellProps> = ({
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 2. Top Bar (56px tall, 1px bottom border) */}
-        <header className="h-[56px] px-6 border-b border-[var(--border)] bg-[var(--bg-2)] flex items-center justify-between shrink-0 sticky top-0 z-20">
-          {/* Breadcrumb on Left */}
-          <div className="flex items-center gap-2 text-xs font-mono">
-            <span className="text-[var(--fg-subtle)]">Mumbai Suburban</span>
-            <span className="text-[var(--border-strong)]">/</span>
+        <header className="h-[56px] px-3 sm:px-6 border-b border-[var(--border)] bg-[var(--bg-2)] flex items-center justify-between shrink-0 sticky top-0 z-20">
+          {/* Breadcrumb on Left with Mobile Hamburger */}
+          <div className="flex items-center gap-2 text-xs font-mono min-w-0">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-1.5 rounded-[6px] text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors shrink-0"
+              aria-label="Open Menu"
+            >
+              <Menu size={15} />
+            </button>
+            <span className="hidden sm:inline text-[var(--fg-subtle)]">Mumbai Suburban</span>
+            <span className="hidden sm:inline text-[var(--border-strong)]">/</span>
             {activeLine ? (
               <span
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-mono font-semibold"
+                className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-semibold truncate max-w-[140px] sm:max-w-none"
                 style={{
                   background: `${lineColor}18`,
                   color: lineColor,
                   border: `1px solid ${lineColor}44`
                 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: lineColor, boxShadow: `0 0 6px ${lineColor}` }} />
-                <span>{activeLine.short} · {activeLine.name}</span>
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: lineColor, boxShadow: `0 0 6px ${lineColor}` }} />
+                <span className="truncate">{activeLine.short}</span>
                 <button
                   type="button"
                   onClick={() => setSelectedLine('all')}
@@ -435,10 +445,10 @@ export const Shell: React.FC<ShellProps> = ({
                 </button>
               </span>
             ) : (
-              <span className="text-[var(--fg-muted)]">All Lines</span>
+              <span className="text-[var(--fg-muted)] text-[11px]">All Lines</span>
             )}
             <span className="text-[var(--border-strong)]">/</span>
-            <span className="text-[var(--fg)] font-medium">{currentNav.label}</span>
+            <span className="text-[var(--fg)] font-medium truncate text-[11px] sm:text-xs">{currentNav.label}</span>
           </div>
 
           {/* Center: Global Search Field (⌘K Hint) */}
@@ -511,30 +521,191 @@ export const Shell: React.FC<ShellProps> = ({
           </div>
         )}
 
-        {/* Content Container (max-width 1360px, 32px padding, 24px vertical rhythm) */}
-        <main className="flex-1 max-w-[1360px] w-full mx-auto p-4 sm:p-8 space-y-6">
+        {/* Content Container (max-width 1360px, responsive padding, bottom padding for mobile bar) */}
+        <main className="flex-1 max-w-[1360px] w-full mx-auto p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-6 pb-20 md:pb-8">
           {children}
         </main>
       </div>
 
-      {/* Mobile Bottom Tab Bar (at 640px) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[var(--bg-2)] border-t border-[var(--border)] z-40 flex items-center justify-around px-2">
-        {navItems.slice(0, 5).map((item) => {
+      {/* Mobile Slide-Over Drawer Navigation */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative w-[300px] max-w-[85vw] bg-[var(--bg-2)] border-r border-[var(--border)] h-full flex flex-col justify-between p-4 z-50 shadow-2xl animate-slide-in">
+            <div className="space-y-4 overflow-y-auto flex-1">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-[var(--fg)] rounded-[5px] flex items-center justify-center font-bold text-xs text-[var(--bg)]">
+                    RB
+                  </div>
+                  <div>
+                    <span className="font-semibold text-sm tracking-tight text-[var(--fg)] block">
+                      RailBlock AI
+                    </span>
+                    <span className="text-[10px] font-mono text-[var(--fg-subtle)]">
+                      Automatic Block Planning
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 rounded-[6px] text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)]"
+                  aria-label="Close Menu"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Line Filter Chips for Mobile */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle)]">
+                  Active Corridor Line
+                </span>
+                <div className="grid grid-cols-4 gap-1.5">
+                  <button
+                    onClick={() => { setSelectedLine('all'); setMobileMenuOpen(false); }}
+                    className={`h-7 rounded-[6px] text-[11px] font-mono font-bold transition-all ${
+                      selectedLine === 'all'
+                        ? 'bg-[var(--fg)] text-[var(--bg)]'
+                        : 'bg-[var(--surface)] text-[var(--fg-muted)] border border-[var(--border)]'
+                    }`}
+                  >
+                    ALL
+                  </button>
+                  <button
+                    onClick={() => { setSelectedLine('central'); setMobileMenuOpen(false); }}
+                    className={`h-7 rounded-[6px] text-[11px] font-mono font-bold transition-all ${
+                      selectedLine === 'central'
+                        ? 'bg-[#E5484D] text-white'
+                        : 'bg-[var(--surface)] text-[var(--fg-muted)] border border-[var(--border)]'
+                    }`}
+                  >
+                    CR
+                  </button>
+                  <button
+                    onClick={() => { setSelectedLine('western'); setMobileMenuOpen(false); }}
+                    className={`h-7 rounded-[6px] text-[11px] font-mono font-bold transition-all ${
+                      selectedLine === 'western'
+                        ? 'bg-[#3E8BFF] text-white'
+                        : 'bg-[var(--surface)] text-[var(--fg-muted)] border border-[var(--border)]'
+                    }`}
+                  >
+                    WR
+                  </button>
+                  <button
+                    onClick={() => { setSelectedLine('harbour'); setMobileMenuOpen(false); }}
+                    className={`h-7 rounded-[6px] text-[11px] font-mono font-bold transition-all ${
+                      selectedLine === 'harbour'
+                        ? 'bg-[#30A46C] text-white'
+                        : 'bg-[var(--surface)] text-[var(--fg-muted)] border border-[var(--border)]'
+                    }`}
+                  >
+                    HR
+                  </button>
+                </div>
+              </div>
+
+              {/* All 8 Navigation items */}
+              <div className="space-y-1 pt-2">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle)] block mb-1">
+                  System Views
+                </span>
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = currentTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        onSelectTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full h-[38px] px-3 rounded-[6px] flex items-center gap-3 text-[13px] font-medium transition-colors text-left cursor-pointer ${
+                        active
+                          ? 'bg-[var(--surface-hover)] text-[var(--fg)] font-semibold border-l-2 border-[#0070F3]'
+                          : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)]'
+                      }`}
+                    >
+                      <Icon size={16} />
+                      <span className="flex-1">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Drawer Footer: Theme & User */}
+            <div className="pt-3 border-t border-[var(--border)] space-y-3">
+              <div className="flex items-center justify-between bg-[var(--surface)] p-1 rounded-[6px] border border-[var(--border)]">
+                <button
+                  onClick={() => setTheme('light')}
+                  className={`flex-1 py-1 text-xs flex items-center justify-center gap-1 rounded transition-colors ${
+                    theme === 'light' ? 'bg-[var(--surface-hover)] text-[var(--fg)] font-medium' : 'text-[var(--fg-subtle)]'
+                  }`}
+                >
+                  <Sun size={13} /> Light
+                </button>
+                <button
+                  onClick={() => setTheme('dark')}
+                  className={`flex-1 py-1 text-xs flex items-center justify-center gap-1 rounded transition-colors ${
+                    theme === 'dark' ? 'bg-[var(--surface-hover)] text-[var(--fg)] font-medium' : 'text-[var(--fg-subtle)]'
+                  }`}
+                >
+                  <Moon size={13} /> Dark
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <div className="w-7 h-7 rounded-full bg-[var(--border-strong)] flex items-center justify-center font-mono font-bold text-[var(--fg)]">
+                  CR
+                </div>
+                <div className="truncate flex-1">
+                  <div className="font-medium text-[var(--fg)] leading-none">Divisional Planner</div>
+                  <div className="text-[10px] text-[var(--fg-subtle)] font-mono mt-0.5">Mumbai Division</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[var(--bg-2)]/95 backdrop-blur-md border-t border-[var(--border)] z-40 flex items-center justify-around px-1">
+        {navItems.slice(0, 4).map((item) => {
           const Icon = item.icon;
           const active = currentTab === item.id;
           return (
             <button
               key={item.id}
-              onClick={() => onSelectTab(item.id)}
+              onClick={() => {
+                onSelectTab(item.id);
+                setMobileMenuOpen(false);
+              }}
               className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-medium transition-colors ${
                 active ? 'text-[#0070F3]' : 'text-[var(--fg-subtle)]'
               }`}
             >
               <Icon size={16} />
-              <span className="mt-0.5">{item.label}</span>
+              <span className="mt-0.5 truncate max-w-[60px]">{item.label}</span>
             </button>
           );
         })}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-medium transition-colors ${
+            mobileMenuOpen ? 'text-[#0070F3]' : 'text-[var(--fg-subtle)]'
+          }`}
+        >
+          <Menu size={16} />
+          <span className="mt-0.5">More</span>
+        </button>
       </nav>
     </div>
   );
