@@ -13,7 +13,9 @@ from app.api.routes import (
     trains_router,
     block_windows_router,
     schedules_router,
+    realtime_router,
 )
+from app.services.live_telemetry_engine import telemetry_engine
 
 # Configure logging
 logging.basicConfig(
@@ -35,8 +37,13 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.error(f"Error during database initialization: {exc}")
     
+    # Start live railway telemetry engine
+    await telemetry_engine.start()
+    
     yield
     
+    # Stop live railway telemetry engine
+    await telemetry_engine.stop()
     logger.info("Shutting down RailBlock AI Backend.")
 
 
@@ -82,20 +89,53 @@ for r in api_routers:
     app.include_router(r, prefix="/api")
     app.include_router(r, prefix=settings.API_V1_STR)
 
+# Register Real-Time Telemetry and WebSocket routes
+app.include_router(realtime_router)
 
-@app.get("/", tags=["System"])
-def root_info():
-    """Root info endpoint providing basic API orientation."""
-    return {
-        "project": settings.PROJECT_NAME,
-        "problem_statement": "SIH26027",
-        "description": "AI-Powered Automatic Block Planning for Indian Railways",
-        "docs_url": "/docs",
-        "health_check": "/api/health",
-        "dashboard_summary": "/api/dashboard/summary",
-        "tasks_endpoint": "/api/tasks",
-        "schedules_endpoint": "/api/schedules"
-    }
+
+import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Locate built frontend dist directory
+possible_dist_paths = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist")),
+    os.path.abspath(os.path.join(os.getcwd(), "frontend", "dist")),
+    os.path.abspath(os.path.join(os.getcwd(), "..", "frontend", "dist")),
+]
+frontend_dist = next((p for p in possible_dist_paths if os.path.isdir(p)), None)
+
+if frontend_dist:
+    logger.info(f"Serving built React frontend from: {frontend_dist}")
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    @app.get("/{full_path:path}", tags=["Frontend SPA"])
+    async def serve_spa(full_path: str):
+        # Don't intercept API or docs routes
+        if full_path.startswith(("api", "ws", "docs", "redoc", "openapi.json")):
+            return None
+        file_path = os.path.join(frontend_dist, full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
+else:
+    logger.info("Frontend dist not found. Operating in API-only mode.")
+
+    @app.get("/", tags=["System"])
+    def root_info():
+        """Root info endpoint providing basic API orientation."""
+        return {
+            "project": settings.PROJECT_NAME,
+            "problem_statement": "SIH26027",
+            "description": "AI-Powered Automatic Block Planning for Indian Railways",
+            "docs_url": "/docs",
+            "health_check": "/api/health",
+            "dashboard_summary": "/api/dashboard/summary",
+            "tasks_endpoint": "/api/tasks",
+            "schedules_endpoint": "/api/schedules"
+        }
 
 
 if __name__ == "__main__":

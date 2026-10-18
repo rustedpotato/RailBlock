@@ -9,6 +9,8 @@ import { getLine } from '../data/lines';
 import { MaintenanceTaskItem, ConflictItem } from '../types/railblock';
 import { AlertTriangle, ArrowRight, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
 
+import { LiveTelemetryMonitor } from '../components/ui/LiveTelemetryMonitor';
+
 interface DashboardViewProps {
   onSelectTask: (task: MaintenanceTaskItem) => void;
   onNavigateTab: (tab: string) => void;
@@ -138,6 +140,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           sparklineData={[93.1, 93.8, 94.2, 94.9, 95.5, 96.0, 96.4]}
         />
       </div>
+
+      {/* 2.5 Real-Time Track & Train Telemetry Feed */}
+      <LiveTelemetryMonitor />
 
       {/* 3. Schedule Timeline Preview (Compact 7-day Gantt) */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] p-5 space-y-4">
