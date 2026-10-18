@@ -20,9 +20,15 @@ import { apiClient } from './api/client';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
-  const [tasks, setTasks] = useState<MaintenanceTaskItem[]>(MOCK_TASKS);
-  const [conflicts, setConflicts] = useState<ConflictItem[]>(MOCK_CONFLICTS);
-  const { selectedLine } = useLine();
+  const {
+    selectedLine,
+    tasks,
+    setTasks,
+    conflicts,
+    addTask,
+    resolveConflict,
+    isLiveDbConnected
+  } = useLine();
 
   const lineTasks = useMemo(() => {
     return tasks.filter((t) => matchesLine(selectedLine, t.section));
@@ -43,22 +49,6 @@ export const App: React.FC = () => {
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [solverStatus, setSolverStatus] = useState<'Idle' | 'Solving' | 'Optimal' | 'Feasible'>('Optimal');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Attempt backend health check or load data gracefully
-  useEffect(() => {
-    const checkBackend = async () => {
-      try {
-        const res = await apiClient.get('/api/tasks');
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          console.log(`[RailBlock AI] Connected to live backend database: ${res.data.length} tasks synced`);
-        }
-      } catch (e) {
-        // Fallback to high-fidelity mock data already populated
-        console.log('[RailBlock AI] Running in standalone high-fidelity demonstration mode');
-      }
-    };
-    checkBackend();
-  }, []);
 
   const handleRunOptimizer = async () => {
     setIsOptimizing(true);
@@ -87,41 +77,13 @@ export const App: React.FC = () => {
   };
 
   const handleAddTask = async (newTask: MaintenanceTaskItem) => {
-    setTasks((prev) => [newTask, ...prev]);
-    setToastMessage(`Task ${newTask.id} successfully queued for Block Planning`);
+    await addTask(newTask);
+    setToastMessage(`Task ${newTask.id} successfully queued & persisted to database`);
     setTimeout(() => setToastMessage(null), 4000);
-
-    // Asynchronously persist to backend DB
-    try {
-      await apiClient.post('/api/tasks', {
-        id: newTask.id,
-        title: newTask.title,
-        description: newTask.description,
-        department: newTask.department,
-        asset_id: newTask.asset_id,
-        corridor_id: 'CORR-BCT-VR',
-        duration_minutes: newTask.duration_minutes,
-        criticality: newTask.criticality,
-        urgency: newTask.urgency,
-        overdue_days: newTask.overdue_days,
-        earliest_start: new Date().toISOString(),
-        deadline: new Date(Date.now() + 86400000 * 3).toISOString(),
-        status: 'PENDING'
-      });
-      console.log(`[RailBlock AI] Task ${newTask.id} persisted to backend database.`);
-    } catch (err) {
-      console.log('[RailBlock AI] Running in memory mode for task:', newTask.id);
-    }
   };
 
   const handleApplyResolution = (conflictId: string, resolutionId: string) => {
-    setConflicts((prev) =>
-      prev.map((c) =>
-        c.id === conflictId
-          ? { ...c, status: 'RESOLVED', appliedResolutionId: resolutionId }
-          : c
-      )
-    );
+    resolveConflict(conflictId, resolutionId);
     setToastMessage(`Resolution applied to ${conflictId}. Schedule updated.`);
     setTimeout(() => setToastMessage(null), 4000);
   };
