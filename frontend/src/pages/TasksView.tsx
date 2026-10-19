@@ -24,12 +24,14 @@ interface TasksViewProps {
   tasks: MaintenanceTaskItem[];
   onSelectTask: (task: MaintenanceTaskItem) => void;
   onOpenNewTaskModal: () => void;
+  onOpenAssignModal?: (task: MaintenanceTaskItem) => void;
 }
 
 export const TasksView: React.FC<TasksViewProps> = ({
   tasks,
   onSelectTask,
-  onOpenNewTaskModal
+  onOpenNewTaskModal,
+  onOpenAssignModal
 }) => {
   const [viewMode, setViewMode] = useState<'table' | 'board'>('table');
   const [searchQuery, setSearchQuery] = useState('');
@@ -272,8 +274,22 @@ export const TasksView: React.FC<TasksViewProps> = ({
                           <span>{task.id}</span>
                         </div>
                       </td>
-                      <td className="max-w-[280px] truncate text-[var(--fg)] font-medium">
-                        {task.title}
+                      <td className="max-w-[320px] py-2.5">
+                        <div className="truncate text-[var(--fg)] font-medium text-xs">
+                          {task.title}
+                        </div>
+                        {task.assigned_crew ? (
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[var(--fg-subtle)] font-mono truncate">
+                            <span className="text-[#0070F3] font-semibold">{task.assigned_crew}</span>
+                            {task.assigned_equipment && (
+                              <span className="text-[var(--fg-muted)] truncate">· {task.assigned_equipment}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mt-0.5 text-[10px] text-[#F5A623] font-mono italic">
+                            Unassigned to sector crew
+                          </div>
+                        )}
                       </td>
                       <td className="font-mono text-xs text-[#0070F3] truncate max-w-[140px]">
                         {task.asset_id}

@@ -47,15 +47,23 @@ export const MOCK_TASKS: MaintenanceTaskItem[] = [
     priority_score: 98.2,
     earliest_start: '2026-10-20 01:00',
     deadline: '2026-10-20 06:00',
-    status: 'PENDING',
+    status: 'IN_PROGRESS',
     required_block_type: 'Traffic Block',
     breakdown: { criticality: 35, urgency: 35, overdue: 15, operational_impact: 13.2 },
     linked_defects: ['DEF-WR-104: Transverse rail head fissure', 'DEF-WR-107: Weld toe microcrack'],
     activity_log: [
-      { timestamp: '19 Oct 18:20', actor: 'DEN (P-Way) Mumbai Central', message: 'Safety caution order imposed, emergency block requested' }
+      { timestamp: '19 Oct 18:20', actor: 'DEN (P-Way) Mumbai Central', message: 'Safety caution order imposed, emergency block requested' },
+      { timestamp: '19 Oct 19:10', actor: 'Admin Controller', message: 'Assigned to P-Way Maintenance Gang #12 & Flash-Butt Rig' }
     ],
     assigned_slot: '20 Oct 01:30 - 04:30',
-    assigned_reason: 'Assigned to Western Railway night fast line mega-block'
+    assigned_reason: 'Assigned to Western Railway night fast line mega-block',
+    assigned_crew: 'P-Way Maintenance Gang #12',
+    assigned_equipment: 'Digital USFD Double Rail Ultrasonic Tester',
+    supervisor: 'R. K. Sharma (SSE P-Way)',
+    sector_status: 'IN_PROGRESS',
+    co_requisite_sectors: ['SIGNAL_TELECOMMUNICATION'],
+    safety_protocol: 'Banner flags at 600m, Detonators at 1200m, Caution order 20 km/h',
+    speed_restriction: '20 km/h Caution Order Active'
   },
   {
     id: 'TSK-WR-102',
@@ -72,13 +80,22 @@ export const MOCK_TASKS: MaintenanceTaskItem[] = [
     priority_score: 89.6,
     earliest_start: '2026-10-20 01:30',
     deadline: '2026-10-21 05:00',
-    status: 'PENDING',
+    status: 'SCHEDULED',
     required_block_type: 'Power & Traffic Block',
     breakdown: { criticality: 28, urgency: 25, overdue: 18, operational_impact: 18.6 },
     linked_defects: ['DEF-WR-219: Contact wire dropper elongation > 4mm'],
     activity_log: [
-      { timestamp: '19 Oct 11:00', actor: 'AEE (TRD) Borivali', message: 'Pantograph damage prevention protocol initiated' }
-    ]
+      { timestamp: '19 Oct 11:00', actor: 'AEE (TRD) Borivali', message: 'Pantograph damage prevention protocol initiated' },
+      { timestamp: '19 Oct 14:00', actor: 'Admin Controller', message: 'Tower Wagon TW-204 scheduled with Borivali TRD Crew' }
+    ],
+    assigned_slot: '20 Oct 02:00 - 04:30',
+    assigned_reason: 'Night corridor window granted by Section Controller',
+    assigned_crew: '8-Wheeler Tower Wagon Crew #108',
+    assigned_equipment: '8-Wheeler DETW Diesel-Electric Tower Wagon #TW-204',
+    supervisor: 'V. Patil (SSE TRD / OHE)',
+    sector_status: 'PERMIT_ISSUED',
+    safety_protocol: '25kV feeder isolated, discharge earth rods placed on both sides',
+    power_isolation: '25kV Feeder BVI-V1 Isolated'
   },
   {
     id: 'TSK-WR-103',
@@ -99,7 +116,14 @@ export const MOCK_TASKS: MaintenanceTaskItem[] = [
     required_block_type: 'Traffic & S&T Disconnection Block',
     breakdown: { criticality: 28, urgency: 20, overdue: 12, operational_impact: 22.4 },
     linked_defects: ['DEF-WR-301: Switch throw time 4.8s (limit 4.0s)'],
-    activity_log: [{ timestamp: '19 Oct 10:05', actor: 'SSE (S&T) Borivali', message: 'Point failure log reviewed' }]
+    activity_log: [{ timestamp: '19 Oct 10:05', actor: 'SSE (S&T) Borivali', message: 'Point failure log reviewed' }],
+    assigned_crew: 'Point Machine Testing & Overhaul Team',
+    assigned_equipment: 'Digital Point Machine Throw & Current Analyzer (DPT-90)',
+    supervisor: 'K. Venkat (SSE Signal)',
+    sector_status: 'ASSIGNED',
+    co_requisite_sectors: ['ENGINEERING'],
+    safety_protocol: 'SI-420 Disconnection Notice served to Station Master, point clamped and padlocked',
+    signal_disconnection: 'Form SI-420 Signed & Logged'
   },
 
   // --- Harbour Railway (CR Harbour Line) Tasks ---
@@ -118,13 +142,19 @@ export const MOCK_TASKS: MaintenanceTaskItem[] = [
     priority_score: 94.7,
     earliest_start: '2026-10-20 01:15',
     deadline: '2026-10-21 05:00',
-    status: 'PENDING',
+    status: 'SCHEDULED',
     required_block_type: 'Track & Structural Safety Block',
     breakdown: { criticality: 35, urgency: 28, overdue: 18, operational_impact: 13.7 },
     linked_defects: ['DEF-HR-88: Tidal spray corrosion on bridge girder no. 4', 'DEF-HR-91: Guard rail bolt loosening'],
     activity_log: [
-      { timestamp: '19 Oct 16:40', actor: 'Executive Engineer Bridges (Harbour)', message: 'Mandatory pre-monsoon bridge rehabilitation requisition' }
-    ]
+      { timestamp: '19 Oct 16:40', actor: 'Executive Engineer Bridges (Harbour)', message: 'Mandatory pre-monsoon bridge rehabilitation requisition' },
+      { timestamp: '19 Oct 19:30', actor: 'Admin Controller', message: 'Assigned to Harbour Bridge Structural Squad' }
+    ],
+    assigned_crew: 'Harbour Bridge Structural Rehabilitation Squad',
+    assigned_equipment: 'Plasser BCM-14 Ballast Cleaning Machine',
+    supervisor: 'M. Deshmukh (ADEN Bridges)',
+    sector_status: 'ASSIGNED',
+    safety_protocol: 'Speed limit 30 km/h, Tidal wave monitor active, Life jackets equipped'
   },
   {
     id: 'TSK-HR-202',
@@ -145,7 +175,12 @@ export const MOCK_TASKS: MaintenanceTaskItem[] = [
     required_block_type: 'Power Block',
     breakdown: { criticality: 28, urgency: 28, overdue: 14, operational_impact: 18.5 },
     linked_defects: ['DEF-HR-120: Neutral section insulator pollution flashover risk'],
-    activity_log: [{ timestamp: '19 Oct 12:30', actor: 'AEE (TRD) Harbour', message: 'Power block requisition submitted' }]
+    activity_log: [{ timestamp: '19 Oct 12:30', actor: 'AEE (TRD) Harbour', message: 'Power block requisition submitted' }],
+    assigned_crew: 'Emergency OHE Breakdown & Wire Tension Gang',
+    assigned_equipment: 'Heavy Discharge Grounding Rod Set (25kV Rated)',
+    supervisor: 'S. Ramanathan (AEE Traction)',
+    sector_status: 'REQUISITIONED',
+    safety_protocol: 'PTW required, 25kV Feeder de-energized, earthing rods locked'
   },
   {
     id: 'TSK-HR-203',
@@ -166,7 +201,12 @@ export const MOCK_TASKS: MaintenanceTaskItem[] = [
     required_block_type: 'S&T Disconnection Block',
     breakdown: { criticality: 28, urgency: 20, overdue: 10, operational_impact: 23.0 },
     linked_defects: ['DEF-HR-133: Standby CPU sync latency alarm'],
-    activity_log: [{ timestamp: '19 Oct 09:40', actor: 'SSE (Signal) Wadala', message: 'Failover drill scheduled' }]
+    activity_log: [{ timestamp: '19 Oct 09:40', actor: 'SSE (Signal) Wadala', message: 'Failover drill scheduled' }],
+    assigned_crew: 'Electronic Interlocking (EI) Squad Alpha',
+    assigned_equipment: 'Optical Time Domain Reflectometer (OTDR) Fiber Unit',
+    supervisor: 'P. Banerjee (ASTE Suburban)',
+    sector_status: 'PERMIT_ISSUED',
+    safety_protocol: 'Station Master counter-signature on SI-420 memo'
   },
   {
     id: 'TSK-2043',
@@ -183,16 +223,24 @@ export const MOCK_TASKS: MaintenanceTaskItem[] = [
     priority_score: 96.8,
     earliest_start: '2026-10-20 01:00',
     deadline: '2026-10-21 05:00',
-    status: 'PENDING',
+    status: 'IN_PROGRESS',
     required_block_type: 'Power & Traffic Block',
     breakdown: { criticality: 35, urgency: 30, overdue: 20, operational_impact: 11.8 },
     linked_defects: ['DEF-891: Contact wire groove wear > 3.2mm', 'DEF-894: Insulator flashover sign'],
     activity_log: [
       { timestamp: '19 Oct 14:30', actor: 'AEE (TRD) Kalyan', message: 'Urgent block requisition escalated' },
-      { timestamp: '19 Oct 09:15', actor: 'Automated Diagnostic', message: 'OHE inspection car marked severity critical' }
+      { timestamp: '19 Oct 09:15', actor: 'Automated Diagnostic', message: 'OHE inspection car marked severity critical' },
+      { timestamp: '19 Oct 19:40', actor: 'Admin Controller', message: 'Assigned to Kalyan Power House Crew with Tensioning Rig' }
     ],
     assigned_slot: '21 Oct 01:30 - 05:30',
-    assigned_reason: 'Night mega window alignment; minimizes express train cancellations'
+    assigned_reason: 'Night mega window alignment; minimizes express train cancellations',
+    assigned_crew: 'Traction Sub-Station & Feeder Crew',
+    assigned_equipment: 'Hydraulic Contact Wire Tensioning Puller & Calibrator',
+    supervisor: 'G. N. Chari (TPC In-Charge)',
+    sector_status: 'IN_PROGRESS',
+    co_requisite_sectors: ['ENGINEERING'],
+    safety_protocol: 'Full 25kV Feeder Trip, Grounding jumpers placed, Section controller cautioned',
+    power_isolation: 'KYN 25kV Up Main Isolated'
   },
   {
     id: 'TSK-2044',

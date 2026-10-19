@@ -2,18 +2,26 @@ import React from 'react';
 import { Drawer } from '../ui/Drawer';
 import { MaintenanceTaskItem } from '../../types/railblock';
 import { DepartmentChip, StatusBadge } from '../ui/Badge';
-import { Clock, AlertTriangle } from 'lucide-react';
+import { Clock, AlertTriangle, Users, Cpu, FileCheck, Wrench, Shield } from 'lucide-react';
+import { SECTORS } from '../../data/sectorData';
 
 interface TaskDetailDrawerProps {
   task: MaintenanceTaskItem | null;
   isOpen: boolean;
   onClose: () => void;
+  onOpenAssignModal?: (task: MaintenanceTaskItem) => void;
 }
 
-export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({ task, isOpen, onClose }) => {
+export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
+  task,
+  isOpen,
+  onClose,
+  onOpenAssignModal
+}) => {
   if (!task) return null;
 
   const { breakdown } = task;
+  const sectorDef = SECTORS[task.department];
 
   return (
     <Drawer
@@ -54,6 +62,93 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({ task, isOpen
           <p className="text-xs text-[var(--fg-muted)] leading-relaxed mt-2">
             {task.description}
           </p>
+        </div>
+
+        {/* Sector Working System & Dispatch Details */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wider text-[var(--fg-subtle)]">
+              Sector Working System & Dispatch
+            </span>
+            {onOpenAssignModal && (
+              <button
+                type="button"
+                onClick={() => onOpenAssignModal(task)}
+                className="text-xs font-semibold text-[#0070F3] hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                <Wrench size={11} />
+                <span>Reassign Sector</span>
+              </button>
+            )}
+          </div>
+
+          <div
+            className="p-3 rounded-[8px] border space-y-2 text-xs"
+            style={{
+              backgroundColor: sectorDef?.badgeBg || 'var(--bg)',
+              borderColor: sectorDef?.badgeBorder || 'var(--border)'
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-[var(--fg)] flex items-center gap-1.5">
+                <Shield size={13} style={{ color: sectorDef?.color || '#0070F3' }} />
+                <span>{sectorDef?.name || task.department}</span>
+              </span>
+              <span
+                className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
+                style={{
+                  backgroundColor: sectorDef?.color ? `${sectorDef.color}25` : 'var(--surface)',
+                  color: sectorDef?.color || 'var(--fg)',
+                  border: `1px solid ${sectorDef?.color || 'var(--border)'}55`
+                }}
+              >
+                {task.sector_status || 'ASSIGNED'}
+              </span>
+            </div>
+
+            <div className="space-y-1.5 pt-1 text-[11px] font-mono">
+              <div className="flex items-center justify-between">
+                <span className="text-[var(--fg-muted)] flex items-center gap-1">
+                  <Users size={12} className="text-[#0070F3]" /> Assigned Gang:
+                </span>
+                <span className="text-[var(--fg)] font-semibold">{task.assigned_crew || 'Pending Assignment'}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[var(--fg-muted)] flex items-center gap-1">
+                  <Cpu size={12} className="text-[#F5A623]" /> Machinery / Tool:
+                </span>
+                <span className="text-[var(--fg)] font-semibold">{task.assigned_equipment || 'Standard Kit'}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[var(--fg-muted)] flex items-center gap-1">
+                  <FileCheck size={12} className="text-[#8E4EC6]" /> Supervisor:
+                </span>
+                <span className="text-[var(--fg)] font-semibold">{task.supervisor || 'In-Charge Officer'}</span>
+              </div>
+            </div>
+
+            {(task.speed_restriction || task.power_isolation || task.signal_disconnection) && (
+              <div className="pt-2 border-t border-[var(--border)] flex flex-wrap gap-1.5">
+                {task.speed_restriction && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#E5484D]/15 text-[#E5484D] border border-[#E5484D]/30">
+                    {task.speed_restriction}
+                  </span>
+                )}
+                {task.power_isolation && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#F5A623]/15 text-[#F5A623] border border-[#F5A623]/30">
+                    {task.power_isolation}
+                  </span>
+                )}
+                {task.signal_disconnection && (
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#8E4EC6]/15 text-[#8E4EC6] border border-[#8E4EC6]/30">
+                    {task.signal_disconnection}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Priority Score Breakdown (Spec: 4 horizontal bars) */}

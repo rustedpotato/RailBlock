@@ -10,16 +10,23 @@ import { PlansView } from './pages/PlansView';
 import { CompareView } from './pages/CompareView';
 import { AssetsView } from './pages/AssetsView';
 import { BlocksTimetableView } from './pages/BlocksTimetableView';
+import { SectorAssignmentView } from './pages/SectorAssignmentView';
+import { PublicViewerPage } from './pages/PublicViewerPage';
+import { LoginPage } from './pages/LoginPage';
 import { TaskDetailDrawer } from './components/drawers/TaskDetailDrawer';
 import { SlotDetailDrawer } from './components/drawers/SlotDetailDrawer';
 import { NewTaskModal } from './components/modals/NewTaskModal';
+import { AssignSectorModal } from './components/modals/AssignSectorModal';
 import { SearchModal } from './components/ui/SearchModal';
 import { MOCK_TASKS, MOCK_CONFLICTS } from './data/mockData';
-import { MaintenanceTaskItem, ConflictItem } from './types/railblock';
+import { MaintenanceTaskItem, ConflictItem, Department, SectorWorkStatus } from './types/railblock';
 import { apiClient } from './api/client';
+import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<string>('dashboard');
+  const { role, isAdmin, isUser, switchRole } = useAuth();
+  const [currentTab, setCurrentTab] = useState<string>(() => (localStorage.getItem('railblock_user_role') === 'USER' ? 'live-viewer' : 'dashboard'));
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const {
     selectedLine,
     tasks,
@@ -27,6 +34,7 @@ export const App: React.FC = () => {
     conflicts,
     addTask,
     resolveConflict,
+    assignSectorWork,
     isLiveDbConnected
   } = useLine();
 
@@ -41,6 +49,7 @@ export const App: React.FC = () => {
   // Modals & Drawers
   const [selectedTask, setSelectedTask] = useState<MaintenanceTaskItem | null>(null);
   const [selectedSlotTask, setSelectedSlotTask] = useState<MaintenanceTaskItem | null>(null);
+  const [selectedAssignTask, setSelectedAssignTask] = useState<MaintenanceTaskItem | null>(null);
   const [selectedConflict, setSelectedConflict] = useState<ConflictItem | null>(null);
   const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -88,6 +97,53 @@ export const App: React.FC = () => {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  const handleSaveSectorAssignment = async (
+    taskId: string,
+    assignment: {
+      department: Department;
+      assigned_crew: string;
+      assigned_equipment: string;
+      supervisor: string;
+      sector_status: SectorWorkStatus;
+      assigned_slot?: string;
+      safety_protocol?: string;
+      speed_restriction?: string;
+      power_isolation?: string;
+      signal_disconnection?: string;
+      co_requisite_sectors?: Department[];
+      note?: string;
+    }
+  ) => {
+    await assignSectorWork(taskId, assignment);
+    setToastMessage(`Task ${taskId} dispatched to ${assignment.assigned_crew} (${assignment.department})`);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  useEffect(() => {
+    if (isUser) {
+      if (currentTab !== 'live-viewer' && currentTab !== 'blocks') {
+        setCurrentTab('live-viewer');
+      }
+    } else {
+      if (currentTab === 'live-viewer') {
+        setCurrentTab('dashboard');
+      }
+    }
+  }, [isUser]);
+
+  if (isLoginOpen) {
+    return (
+      <ThemeProvider>
+        <LoginPage
+          onLoginSuccess={() => {
+            setIsLoginOpen(false);
+          }}
+          onCancel={() => setIsLoginOpen(false)}
+        />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <Shell
@@ -96,6 +152,7 @@ export const App: React.FC = () => {
         onOpenSearch={() => setIsSearchOpen(true)}
         onRunOptimizer={handleRunOptimizer}
         isOptimizing={isOptimizing}
+        onOpenLogin={() => setIsLoginOpen(true)}
       >
         {/* Toast Notification */}
         {toastMessage && (
@@ -106,7 +163,11 @@ export const App: React.FC = () => {
         )}
 
         {/* View Switcher */}
-        {currentTab === 'dashboard' && (
+        {(currentTab === 'live-viewer' || (isUser && currentTab !== 'blocks')) && (
+          <PublicViewerPage />
+        )}
+
+        {currentTab === 'dashboard' && !isUser && (
           <DashboardView
             onSelectTask={(task) => setSelectedTask(task)}
             onNavigateTab={(tab) => setCurrentTab(tab)}
@@ -117,11 +178,19 @@ export const App: React.FC = () => {
           />
         )}
 
+        {currentTab === 'sectors' && (
+          <SectorAssignmentView
+            onOpenAssignModal={(task) => setSelectedAssignTask(task)}
+            onSelectTask={(task) => setSelectedTask(task)}
+          />
+        )}
+
         {currentTab === 'tasks' && (
           <TasksView
             tasks={lineTasks}
             onSelectTask={(task) => setSelectedTask(task)}
             onOpenNewTaskModal={() => setIsNewTaskOpen(true)}
+            onOpenAssignModal={(task) => setSelectedAssignTask(task)}
           />
         )}
 
@@ -155,6 +224,7 @@ export const App: React.FC = () => {
           task={selectedTask}
           isOpen={!!selectedTask}
           onClose={() => setSelectedTask(null)}
+          onOpenAssignModal={(t) => setSelectedAssignTask(t)}
         />
 
         <SlotDetailDrawer
@@ -176,6 +246,13 @@ export const App: React.FC = () => {
           isOpen={isNewTaskOpen}
           onClose={() => setIsNewTaskOpen(false)}
           onAddTask={handleAddTask}
+        />
+
+        <AssignSectorModal
+          task={selectedAssignTask}
+          isOpen={!!selectedAssignTask}
+          onClose={() => setSelectedAssignTask(null)}
+          onSave={handleSaveSectorAssignment}
         />
 
         <SearchModal

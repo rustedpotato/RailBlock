@@ -23,6 +23,38 @@ export interface ActivityLogItem {
   message: string;
 }
 
+export type SectorWorkStatus =
+  | 'REQUISITIONED'
+  | 'ASSIGNED'
+  | 'PERMIT_ISSUED'
+  | 'IN_PROGRESS'
+  | 'FIT_CERTIFIED';
+
+export interface SectorCrew {
+  id: string;
+  name: string;
+  base: string;
+  strength: number;
+  department: Department;
+  status: 'Available' | 'On-Track' | 'Standby';
+}
+
+export interface SectorMachinery {
+  id: string;
+  name: string;
+  type: string;
+  department: Department;
+  status: 'Ready' | 'Deployed' | 'Maintenance';
+}
+
+export interface SectorSupervisor {
+  id: string;
+  name: string;
+  role: string;
+  department: Department;
+  phone: string;
+}
+
 export interface MaintenanceTaskItem {
   id: string;
   rank: number;
@@ -45,6 +77,16 @@ export interface MaintenanceTaskItem {
   activity_log: ActivityLogItem[];
   assigned_slot?: string;
   assigned_reason?: string;
+  // Sector Working System & Assignment Fields
+  assigned_crew?: string;
+  assigned_equipment?: string;
+  supervisor?: string;
+  sector_status?: SectorWorkStatus;
+  co_requisite_sectors?: Department[];
+  safety_protocol?: string;
+  speed_restriction?: string;
+  power_isolation?: string;
+  signal_disconnection?: string;
 }
 
 export interface SuggestedResolution {

@@ -12,10 +12,27 @@ import {
   TrainScheduleItem,
   AssetItem,
   BlockWindowItem,
-  ConflictItem
+  ConflictItem,
+  Department,
+  SectorWorkStatus
 } from '../types/railblock';
 import { fetchAllRailwayData, DashboardSummaryData } from '../api/dataSync';
 import { apiClient } from '../api/client';
+
+export interface SectorAssignmentPayload {
+  department?: Department;
+  assigned_crew?: string;
+  assigned_equipment?: string;
+  supervisor?: string;
+  sector_status?: SectorWorkStatus;
+  assigned_slot?: string;
+  safety_protocol?: string;
+  speed_restriction?: string;
+  power_isolation?: string;
+  signal_disconnection?: string;
+  co_requisite_sectors?: Department[];
+  note?: string;
+}
 
 interface LineContextValue {
   selectedLine: LineId;
@@ -32,6 +49,8 @@ interface LineContextValue {
   refreshData: () => Promise<void>;
   addTask: (task: MaintenanceTaskItem) => Promise<void>;
   resolveConflict: (conflictId: string, resolutionId: string) => void;
+  assignSectorWork: (taskId: string, assignment: SectorAssignmentPayload) => Promise<void>;
+  updateSectorStatus: (taskId: string, status: SectorWorkStatus, note?: string) => void;
 }
 
 const LineContext = createContext<LineContextValue | undefined>(undefined);
@@ -104,6 +123,87 @@ export const LineProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
+  const assignSectorWork = async (taskId: string, assignment: SectorAssignmentPayload) => {
+    const timestamp = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id !== taskId) return t;
+
+        const newLogEntry = {
+          timestamp,
+          actor: 'Divisional Admin Controller',
+          message: assignment.note || `Sector assignment updated: Assigned to ${assignment.assigned_crew || 'Crew'} (${assignment.department || t.department})`
+        };
+
+        const newStatus =
+          assignment.sector_status === 'IN_PROGRESS'
+            ? 'IN_PROGRESS'
+            : assignment.sector_status === 'FIT_CERTIFIED'
+            ? 'COMPLETED'
+            : assignment.sector_status === 'PERMIT_ISSUED' || assignment.sector_status === 'ASSIGNED'
+            ? 'SCHEDULED'
+            : t.status;
+
+        return {
+          ...t,
+          department: assignment.department || t.department,
+          assigned_crew: assignment.assigned_crew ?? t.assigned_crew,
+          assigned_equipment: assignment.assigned_equipment ?? t.assigned_equipment,
+          supervisor: assignment.supervisor ?? t.supervisor,
+          sector_status: assignment.sector_status ?? t.sector_status ?? 'ASSIGNED',
+          assigned_slot: assignment.assigned_slot ?? t.assigned_slot,
+          safety_protocol: assignment.safety_protocol ?? t.safety_protocol,
+          speed_restriction: assignment.speed_restriction ?? t.speed_restriction,
+          power_isolation: assignment.power_isolation ?? t.power_isolation,
+          signal_disconnection: assignment.signal_disconnection ?? t.signal_disconnection,
+          co_requisite_sectors: assignment.co_requisite_sectors ?? t.co_requisite_sectors,
+          status: newStatus,
+          activity_log: [newLogEntry, ...t.activity_log]
+        };
+      })
+    );
+
+    // Optionally notify backend if connected
+    try {
+      await apiClient.patch(`/api/tasks/${taskId}`, {
+        department: assignment.department,
+        assigned_crew: assignment.assigned_crew,
+        assigned_equipment: assignment.assigned_equipment,
+        supervisor: assignment.supervisor,
+        sector_status: assignment.sector_status,
+        assigned_slot: assignment.assigned_slot
+      });
+    } catch (e) {
+      // Offline fallback
+    }
+  };
+
+  const updateSectorStatus = (taskId: string, status: SectorWorkStatus, note?: string) => {
+    const timestamp = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id !== taskId) return t;
+        const newLogEntry = {
+          timestamp,
+          actor: 'Sector Supervisor',
+          message: note || `Sector progress transition to [${status.replace('_', ' ')}]`
+        };
+        const newMainStatus =
+          status === 'IN_PROGRESS'
+            ? 'IN_PROGRESS'
+            : status === 'FIT_CERTIFIED'
+            ? 'COMPLETED'
+            : t.status;
+        return {
+          ...t,
+          sector_status: status,
+          status: newMainStatus,
+          activity_log: [newLogEntry, ...t.activity_log]
+        };
+      })
+    );
+  };
+
   const update = (line: LineId) => {
     localStorage.setItem('railblock-line', line);
     setSelectedLine(line);
@@ -125,7 +225,9 @@ export const LineProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLiveDbConnected,
         refreshData,
         addTask,
-        resolveConflict
+        resolveConflict,
+        assignSectorWork,
+        updateSectorStatus
       }}
     >
       {children}

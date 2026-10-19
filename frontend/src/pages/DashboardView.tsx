@@ -503,6 +503,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <span className="w-2 h-2 rounded-full bg-[var(--danger)]" /> Overdue (11%)
             </span>
           </div>
+
+          <div className="pt-2 border-t border-[var(--border)] text-center">
+            <button
+              type="button"
+              onClick={() => onNavigateTab('sectors')}
+              className="text-xs font-semibold text-[#0070F3] hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer"
+            >
+              <span>Manage Sector Field Units & Task Assignments (Engg · TRD · S&T)</span>
+              <ArrowRight size={13} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

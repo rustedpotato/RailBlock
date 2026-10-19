@@ -22,9 +22,14 @@ import {
   Layers,
   Sparkles,
   Menu,
-  X
+  X,
+  Wrench,
+  Train,
+  Shield,
+  LogOut
 } from 'lucide-react';
 import { useLine } from '../context/LineContext';
+import { useAuth } from '../context/AuthContext';
 import { LINES, getLine, LineId } from '../data/lines';
 
 interface ShellProps {
@@ -33,6 +38,7 @@ interface ShellProps {
   onOpenSearch: () => void;
   onRunOptimizer: () => void;
   isOptimizing: boolean;
+  onOpenLogin?: () => void;
   children: React.ReactNode;
 }
 
@@ -42,6 +48,7 @@ export const Shell: React.FC<ShellProps> = ({
   onOpenSearch,
   onRunOptimizer,
   isOptimizing,
+  onOpenLogin,
   children
 }) => {
   const { theme, setTheme } = useTheme();
@@ -114,16 +121,24 @@ export const Shell: React.FC<ShellProps> = ({
     }
   ];
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { id: 'scheduler', label: 'Scheduler', icon: CalendarDays },
-    { id: 'conflicts', label: 'Conflicts', icon: AlertTriangle },
-    { id: 'plans', label: 'Plans', icon: FileText },
-    { id: 'compare', label: 'Compare', icon: GitCompare },
-    { id: 'assets', label: 'Assets', icon: Cpu },
-    { id: 'blocks', label: 'Blocks & Timetable', icon: Clock }
-  ];
+  const { role, user, isAdmin, isUser, switchRole } = useAuth();
+
+  const navItems = isUser
+    ? [
+        { id: 'live-viewer', label: 'Works & Regulated Trains', icon: Train },
+        { id: 'blocks', label: 'Blocks Timetable', icon: Clock }
+      ]
+    : [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'sectors', label: 'Sector Assignment', icon: Wrench },
+        { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+        { id: 'scheduler', label: 'Scheduler', icon: CalendarDays },
+        { id: 'conflicts', label: 'Conflicts', icon: AlertTriangle },
+        { id: 'plans', label: 'Plans', icon: FileText },
+        { id: 'compare', label: 'Compare', icon: GitCompare },
+        { id: 'assets', label: 'Assets', icon: Cpu },
+        { id: 'blocks', label: 'Blocks & Timetable', icon: Clock }
+      ];
 
   const currentNav = navItems.find((n) => n.id === currentTab) || navItems[0];
 
@@ -389,22 +404,47 @@ export const Shell: React.FC<ShellProps> = ({
             </button>
           </div>
 
-          {/* User Profile */}
-          <div className="flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer">
+          {/* User Profile / Role Switcher */}
+          <div
+            onClick={() => (onOpenLogin ? onOpenLogin() : switchRole(isAdmin ? 'USER' : 'ADMIN'))}
+            className="flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border)]"
+            title={isAdmin ? 'Click to preview Passenger View or switch accounts' : 'Click to log in as Divisional Admin'}
+          >
             <div className="flex items-center gap-2.5 truncate">
-              <div className="w-7 h-7 rounded-full bg-[var(--border-strong)] flex items-center justify-center text-xs font-mono font-semibold text-[var(--fg)]">
-                CR
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono font-semibold"
+                style={{
+                  backgroundColor: isAdmin ? 'var(--border-strong)' : 'rgba(48, 164, 108, 0.2)',
+                  color: isAdmin ? 'var(--fg)' : '#30A46C'
+                }}
+              >
+                {isAdmin ? 'CR' : 'PB'}
               </div>
               <div className="truncate">
-                <div className="text-xs font-medium text-[var(--fg)] leading-none">
-                  Divisional Planner
+                <div className="text-xs font-medium text-[var(--fg)] leading-none flex items-center gap-1.5">
+                  <span className="truncate">{isAdmin ? 'Divisional Admin' : 'Public Viewer'}</span>
                 </div>
-                <div className="text-[11px] text-[var(--fg-subtle)] font-mono mt-0.5">
-                  Mumbai Central
+                <div className="text-[10px] text-[var(--fg-subtle)] font-mono mt-0.5 truncate">
+                  {isAdmin ? 'Full Operational Access' : 'Read-Only Live Feed'}
                 </div>
               </div>
             </div>
-            <Settings size={14} className="text-[var(--fg-subtle)] hover:text-[var(--fg)]" />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenLogin) onOpenLogin();
+                else switchRole(isAdmin ? 'USER' : 'ADMIN');
+              }}
+              className="p-1 rounded text-[var(--fg-subtle)] hover:text-[var(--fg)]"
+              title={isAdmin ? 'Switch to Passenger View' : 'Log in as Admin'}
+            >
+              {isAdmin ? (
+                <Train size={14} className="text-[#30A46C]" />
+              ) : (
+                <Shield size={14} className="text-[#0070F3]" />
+              )}
+            </button>
           </div>
         </div>
       </aside>
@@ -463,22 +503,53 @@ export const Shell: React.FC<ShellProps> = ({
             </kbd>
           </div>
 
-          {/* Right: Date-range, Run Optimizer, Bell */}
-          <div className="flex items-center gap-3">
+          {/* Right: Date-range, Run Optimizer / Live Badge, Role Switch, Bell */}
+          <div className="flex items-center gap-2.5">
             <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono text-[var(--fg-muted)] px-2.5 py-1 rounded-[6px] border border-[var(--border)] bg-[var(--surface)]">
               <Clock size={13} className="text-[#0070F3]" />
               <span>19 – 25 Oct 2026</span>
             </div>
 
-            <Button
-              variant="primary"
-              size="md"
-              icon={<Play size={13} />}
-              onClick={onRunOptimizer}
-              disabled={isOptimizing}
-            >
-              {isOptimizing ? 'Solving...' : 'Run Optimizer'}
-            </Button>
+            {isAdmin ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => switchRole('USER')}
+                  className="hidden sm:flex items-center gap-1.5 h-[34px] px-2.5 rounded-[6px] text-xs font-medium bg-[var(--surface)] border border-[var(--border)] hover:border-[#30A46C] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-all cursor-pointer"
+                  title="Switch to Passenger / Station View"
+                >
+                  <Train size={13} className="text-[#30A46C]" />
+                  <span>Passenger View</span>
+                </button>
+
+                <Button
+                  variant="primary"
+                  size="md"
+                  icon={<Play size={13} />}
+                  onClick={onRunOptimizer}
+                  disabled={isOptimizing}
+                >
+                  {isOptimizing ? 'Solving...' : 'Run Optimizer'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-[6px] border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="hidden sm:inline">Live Passenger Feed</span>
+                  <span className="sm:hidden">Live</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => (onOpenLogin ? onOpenLogin() : switchRole('ADMIN'))}
+                  className="h-[34px] px-3 rounded-[6px] text-xs font-semibold bg-[#0070F3] hover:bg-[#0070F3]/90 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Shield size={13} />
+                  <span>Admin Login</span>
+                </button>
+              </>
+            )}
 
             <div className="relative">
               <button
