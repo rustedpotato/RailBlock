@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +14,10 @@ from app.api.routes import (
     block_windows_router,
     schedules_router,
     realtime_router,
+    corridors_router,
+    pipeline_router,
+    ingest_router,
+    dispatch_router,
 )
 from app.services.live_telemetry_engine import telemetry_engine
 
@@ -51,7 +55,7 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     version="0.2.0",
     description=(
-        "SIH26027 — AI-Powered Automatic Block Planning to Maximize "
+        "SIH26027 â€” AI-Powered Automatic Block Planning to Maximize "
         "Asset Availability for Train Operations on Indian Railways.\n\n"
         "**DISCLAIMER:** Research prototype decision-support tool. "
         "All generated maintenance blocks require authorized railway controller validation."
@@ -83,6 +87,10 @@ api_routers = [
     trains_router,
     block_windows_router,
     schedules_router,
+    corridors_router,
+    pipeline_router,
+    ingest_router,
+    dispatch_router,
 ]
 
 for r in api_routers:

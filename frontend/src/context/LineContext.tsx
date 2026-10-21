@@ -1,13 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect, useCallback } from 'react';
 import { LineId, LINES, getLineForSection } from '../data/lines';
 import {
-  MOCK_TASKS,
-  MOCK_TRAINS,
-  MOCK_ASSETS,
-  MOCK_BLOCK_WINDOWS,
-  MOCK_CONFLICTS
-} from '../data/mockData';
-import {
   MaintenanceTaskItem,
   TrainScheduleItem,
   AssetItem,
@@ -16,7 +9,13 @@ import {
   Department,
   SectorWorkStatus
 } from '../types/railblock';
-import { fetchAllRailwayData, DashboardSummaryData } from '../api/dataSync';
+import {
+  fetchAllRailwayData,
+  DashboardSummaryData,
+  PipelineOverviewData,
+  reseedDataset,
+  runOptimizationPipeline
+} from '../api/dataSync';
 import { apiClient } from '../api/client';
 
 export interface SectorAssignmentPayload {
@@ -45,8 +44,12 @@ interface LineContextValue {
   conflicts: ConflictItem[];
   setConflicts: React.Dispatch<React.SetStateAction<ConflictItem[]>>;
   dashboardSummary: DashboardSummaryData | null;
+  pipelineOverview: PipelineOverviewData | null;
   isLiveDbConnected: boolean;
+  isLoadingData: boolean;
   refreshData: () => Promise<void>;
+  reseedData: () => Promise<void>;
+  runOptimization: () => Promise<any>;
   addTask: (task: MaintenanceTaskItem) => Promise<void>;
   resolveConflict: (conflictId: string, resolutionId: string) => void;
   assignSectorWork: (taskId: string, assignment: SectorAssignmentPayload) => Promise<void>;
@@ -60,15 +63,18 @@ export const LineProvider: React.FC<{ children: React.ReactNode }> = ({ children
     () => (localStorage.getItem('railblock-line') as LineId) || 'all'
   );
 
-  const [tasks, setTasks] = useState<MaintenanceTaskItem[]>(MOCK_TASKS);
-  const [trains, setTrains] = useState<TrainScheduleItem[]>(MOCK_TRAINS);
-  const [assets, setAssets] = useState<AssetItem[]>(MOCK_ASSETS);
-  const [blockWindows, setBlockWindows] = useState<BlockWindowItem[]>(MOCK_BLOCK_WINDOWS);
-  const [conflicts, setConflicts] = useState<ConflictItem[]>(MOCK_CONFLICTS);
+  const [tasks, setTasks] = useState<MaintenanceTaskItem[]>([]);
+  const [trains, setTrains] = useState<TrainScheduleItem[]>([]);
+  const [assets, setAssets] = useState<AssetItem[]>([]);
+  const [blockWindows, setBlockWindows] = useState<BlockWindowItem[]>([]);
+  const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
   const [dashboardSummary, setDashboardSummary] = useState<DashboardSummaryData | null>(null);
+  const [pipelineOverview, setPipelineOverview] = useState<PipelineOverviewData | null>(null);
   const [isLiveDbConnected, setIsLiveDbConnected] = useState<boolean>(false);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
 
   const refreshData = useCallback(async () => {
+    setIsLoadingData(true);
     try {
       const liveData = await fetchAllRailwayData();
       setTasks(liveData.tasks);
@@ -77,11 +83,34 @@ export const LineProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setBlockWindows(liveData.blockWindows);
       setConflicts(liveData.conflicts);
       setDashboardSummary(liveData.dashboardSummary);
+      setPipelineOverview(liveData.pipelineOverview);
       setIsLiveDbConnected(liveData.isBackendConnected);
     } catch (err) {
       console.warn('[LineContext] Data fetch error:', err);
+    } finally {
+      setIsLoadingData(false);
     }
   }, []);
+
+  const reseedData = useCallback(async () => {
+    try {
+      await reseedDataset();
+      await refreshData();
+    } catch (err) {
+      console.error('[LineContext] Reseed failed:', err);
+    }
+  }, [refreshData]);
+
+  const runOptimization = useCallback(async () => {
+    try {
+      const result = await runOptimizationPipeline();
+      await refreshData();
+      return result;
+    } catch (err) {
+      console.error('[LineContext] Run optimization failed:', err);
+      throw err;
+    }
+  }, [refreshData]);
 
   // Fetch real database records on initial load
   useEffect(() => {
@@ -222,8 +251,12 @@ export const LineProvider: React.FC<{ children: React.ReactNode }> = ({ children
         conflicts,
         setConflicts,
         dashboardSummary,
+        pipelineOverview,
         isLiveDbConnected,
+        isLoadingData,
         refreshData,
+        reseedData,
+        runOptimization,
         addTask,
         resolveConflict,
         assignSectorWork,
@@ -255,8 +288,12 @@ export const useLineData = () => {
     blockWindows,
     conflicts,
     dashboardSummary,
+    pipelineOverview,
     isLiveDbConnected,
+    isLoadingData,
     refreshData,
+    reseedData,
+    runOptimization,
     addTask
   } = useLine();
 
@@ -269,17 +306,48 @@ export const useLineData = () => {
         ? LINES.flatMap((l) => l.sections)
         : LINES.find((l) => l.id === selectedLine)!.sections;
 
+    const filteredTasks = by(tasks);
+    const filteredTrains = by(trains);
+    const filteredAssets = by(assets);
+    const filteredWindows = by(blockWindows);
+    const filteredConflicts = by(conflicts);
+
     return {
       SECTIONS,
-      MOCK_TASKS: by(tasks),
-      MOCK_TRAINS: by(trains),
-      MOCK_ASSETS: by(assets),
-      MOCK_BLOCK_WINDOWS: by(blockWindows),
-      MOCK_CONFLICTS: by(conflicts),
+      tasks: filteredTasks,
+      trains: filteredTrains,
+      assets: filteredAssets,
+      blockWindows: filteredWindows,
+      conflicts: filteredConflicts,
+      // Backward compatibility aliases for existing views
+      MOCK_TASKS: filteredTasks,
+      MOCK_TRAINS: filteredTrains,
+      MOCK_ASSETS: filteredAssets,
+      MOCK_BLOCK_WINDOWS: filteredWindows,
+      MOCK_CONFLICTS: filteredConflicts,
       dashboardSummary,
+      pipelineOverview,
       isLiveDbConnected,
+      isLoadingData,
       refreshData,
+      reseedData,
+      runOptimization,
       addTask
     };
-  }, [selectedLine, tasks, trains, assets, blockWindows, conflicts, dashboardSummary, isLiveDbConnected, refreshData, addTask]);
+  }, [
+    selectedLine,
+    tasks,
+    trains,
+    assets,
+    blockWindows,
+    conflicts,
+    dashboardSummary,
+    pipelineOverview,
+    isLiveDbConnected,
+    isLoadingData,
+    refreshData,
+    reseedData,
+    runOptimization,
+    addTask
+  ]);
 };

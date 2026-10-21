@@ -26,7 +26,8 @@ import {
   Wrench,
   Train,
   Shield,
-  LogOut
+  LogOut,
+  Database
 } from 'lucide-react';
 import { useLine } from '../context/LineContext';
 import { useAuth } from '../context/AuthContext';
@@ -130,6 +131,7 @@ export const Shell: React.FC<ShellProps> = ({
       ]
     : [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'pipeline', label: 'Data Pipeline & Dataset', icon: Database },
         { id: 'sectors', label: 'Sector Assignment', icon: Wrench },
         { id: 'tasks', label: 'Tasks', icon: CheckSquare },
         { id: 'scheduler', label: 'Scheduler', icon: CalendarDays },

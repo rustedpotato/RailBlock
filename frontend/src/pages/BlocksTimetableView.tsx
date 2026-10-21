@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { TabNav, Input } from '../components/ui/Controls';
 import { Button } from '../components/ui/Buttons';
 import { LineBadge } from '../components/ui/LineBadge';
-import { MOCK_BLOCK_WINDOWS, MOCK_TRAINS } from '../data/mockData';
-import { useLine, matchesLine } from '../context/LineContext';
+import { useLine, useLineData, matchesLine } from '../context/LineContext';
 import { BlockWindowItem, TrainScheduleItem } from '../types/railblock';
 import { Plus, Search, Clock, Train, Sliders, Calendar } from 'lucide-react';
 
@@ -11,12 +10,12 @@ export const BlocksTimetableView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'windows' | 'timetable'>('windows');
   const [searchTrain, setSearchTrain] = useState('');
   const [showDiagram, setShowDiagram] = useState(false);
-  const [windows, setWindows] = useState<BlockWindowItem[]>(MOCK_BLOCK_WINDOWS);
   const { selectedLine } = useLine();
+  const { blockWindows, trains } = useLineData();
 
-  const filteredWindows = windows.filter((w) => matchesLine(selectedLine, w.section));
+  const filteredWindows = blockWindows.filter((w) => matchesLine(selectedLine, w.section));
 
-  const filteredTrains = MOCK_TRAINS.filter(
+  const filteredTrains = trains.filter(
     (t) =>
       matchesLine(selectedLine, t.section) &&
       (t.train_number.includes(searchTrain) ||
@@ -53,8 +52,7 @@ export const BlocksTimetableView: React.FC = () => {
                 utilized_minutes: 0,
                 allocated_tasks_count: 0
               };
-              setWindows([newWindow, ...windows]);
-              alert(`Added new block window: ${newWindow.id}`);
+              alert(`New block window drafted: ${newWindow.id}. Connect to DB API to commit.`);
             }}
           >
             Add Window
@@ -77,7 +75,7 @@ export const BlocksTimetableView: React.FC = () => {
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] p-5 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--fg)]">
-              Scheduled Maintenance Possession Windows ({windows.length})
+              Scheduled Maintenance Possession Windows ({filteredWindows.length})
             </span>
             <span className="text-xs font-mono text-[var(--fg-muted)]">
               Hatched bands represent track possessions

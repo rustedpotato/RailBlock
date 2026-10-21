@@ -2,20 +2,20 @@ import React, { useState } from 'react';
 import { FilterPill } from '../components/ui/Controls';
 import { StatusBadge } from '../components/ui/Badge';
 import { LineBadge } from '../components/ui/LineBadge';
-import { MOCK_ASSETS, SECTIONS } from '../data/mockData';
-import { useLine, matchesLine } from '../context/LineContext';
+import { useLine, useLineData, matchesLine } from '../context/LineContext';
 import { LINES, getLine } from '../data/lines';
 
 export const AssetsView: React.FC = () => {
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const { selectedLine } = useLine();
+  const { assets, SECTIONS } = useLineData();
   const activeLine = getLine(selectedLine);
 
   const availableSections = selectedLine === 'all'
     ? SECTIONS
     : LINES.find((l) => l.id === selectedLine)?.sections ?? SECTIONS;
 
-  const filteredAssets = MOCK_ASSETS.filter((a) => {
+  const filteredAssets = assets.filter((a) => {
     if (!matchesLine(selectedLine, a.section)) return false;
     if (deptFilter !== 'ALL' && a.department !== deptFilter) return false;
     return true;

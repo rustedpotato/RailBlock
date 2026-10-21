@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Train, CheckSquare, Layers } from 'lucide-react';
-import { MOCK_TASKS, MOCK_ASSETS, MOCK_TRAINS } from '../../data/mockData';
+import { useLineData } from '../../context/LineContext';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -10,6 +10,7 @@ interface SearchModalProps {
 
 export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSelectTask }) => {
   const [query, setQuery] = useState('');
+  const { tasks, assets, trains } = useLineData();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -27,15 +28,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose, onSel
 
   const q = query.toLowerCase().trim();
 
-  const filteredTasks = MOCK_TASKS.filter(
+  const filteredTasks = tasks.filter(
     (t) => t.id.toLowerCase().includes(q) || t.title.toLowerCase().includes(q) || t.section.toLowerCase().includes(q)
   );
 
-  const filteredAssets = MOCK_ASSETS.filter(
+  const filteredAssets = assets.filter(
     (a) => a.id.toLowerCase().includes(q) || a.name.toLowerCase().includes(q) || a.section.toLowerCase().includes(q)
   );
 
-  const filteredTrains = MOCK_TRAINS.filter(
+  const filteredTrains = trains.filter(
     (tr) => tr.train_number.includes(q) || tr.name.toLowerCase().includes(q)
   );
 

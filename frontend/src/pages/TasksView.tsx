@@ -4,7 +4,6 @@ import { Input, FilterPill } from '../components/ui/Controls';
 import { DepartmentChip, StatusBadge } from '../components/ui/Badge';
 import { LineBadge } from '../components/ui/LineBadge';
 import { MaintenanceTaskItem, Department, TaskStatus } from '../types/railblock';
-import { SECTIONS } from '../data/mockData';
 import { useLine, matchesLine } from '../context/LineContext';
 import { LINES, getLine } from '../data/lines';
 import {
@@ -45,8 +44,8 @@ export const TasksView: React.FC<TasksViewProps> = ({
   const activeLine = getLine(selectedLine);
 
   const availableSections = selectedLine === 'all'
-    ? SECTIONS
-    : LINES.find(l => l.id === selectedLine)?.sections ?? SECTIONS;
+    ? LINES.flatMap(l => l.sections)
+    : LINES.find(l => l.id === selectedLine)?.sections ?? LINES.flatMap(l => l.sections);
 
   // Filtering
   const filteredTasks = tasks.filter((task) => {

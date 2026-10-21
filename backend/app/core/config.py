@@ -1,4 +1,4 @@
-from typing import List, Union
+﻿from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
@@ -18,6 +18,16 @@ class Settings(BaseSettings):
 
     # Database Configuration
     DATABASE_URL: str = "sqlite:///./railblock.db"
+
+    # Gemini (Google Search grounded mega-block fetcher)
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-3.5-flash-lite"
+
+    # WhatsApp & Twilio Dispatch Configuration
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_WHATSAPP_NUMBER: str = "whatsapp:+14155238886"
+    PUBLIC_BASE_URL: str = "http://localhost:5173"
 
     # Server binding defaults
     HOST: str = "0.0.0.0"

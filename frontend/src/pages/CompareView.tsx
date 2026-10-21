@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
-import { MOCK_COMPARE_METRICS } from '../data/mockData';
+import { useLineData } from '../context/LineContext';
+import { ComparisonMetric } from '../types/railblock';
 import { GitCompare, TrendingUp, BarChart2, ShieldCheck, Zap } from 'lucide-react';
 
 export const CompareView: React.FC = () => {
+  const { tasks, conflicts } = useLineData();
   const [baselinePlan, setBaselinePlan] = useState('Manual Section Controller Draft');
   const [optimizedPlan, setOptimizedPlan] = useState('OR-Tools AI Optimized Schedule v2.4');
+
+  const total = tasks.length;
+  const scheduled = tasks.filter((t) => t.assigned_slot).length;
+  const activeConflicts = conflicts.filter((c) => c.status === 'ACTIVE').length;
+  const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
+  const MOCK_COMPARE_METRICS: ComparisonMetric[] = [
+    { metric: 'Tasks scheduled', baseline: 0, optimized: scheduled, change: `+${scheduled}`, isPositive: true },
+    { metric: 'Schedule coverage', baseline: '0%', optimized: `${pct(scheduled)}%`, change: `+${pct(scheduled)}%`, isPositive: true },
+    { metric: 'Unscheduled backlog', baseline: total, optimized: total - scheduled, change: `-${scheduled}`, isPositive: true },
+    { metric: 'Active conflicts', baseline: 'n/a', optimized: activeConflicts, change: '—', isPositive: activeConflicts === 0 }
+  ];
 
   const deptDowntime = [
     { dept: 'Engineering', baseline: 42, optimized: 24 },

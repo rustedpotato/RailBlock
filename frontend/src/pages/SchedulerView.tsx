@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '../components/ui/Buttons';
 import { SegmentedControl } from '../components/ui/Controls';
 import { LineBadge } from '../components/ui/LineBadge';
-import { SECTIONS, MOCK_TASKS, MOCK_TRAINS } from '../data/mockData';
 import { MaintenanceTaskItem } from '../types/railblock';
-import { useLine, matchesLine } from '../context/LineContext';
+import { useLine, useLineData } from '../context/LineContext';
 import { LINES, getLine } from '../data/lines';
 import { Play, Save, Sliders, AlertTriangle, Clock, Layers } from 'lucide-react';
 
@@ -29,6 +28,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({
   const [trdWeight, setTrdWeight] = useState(35);
   const [stWeight, setStWeight] = useState(30);
   const { selectedLine } = useLine();
+  const { tasks, SECTIONS } = useLineData();
   const activeLine = getLine(selectedLine);
 
   const availableSections = selectedLine === 'all'
@@ -284,47 +284,46 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({
                         )}
 
                         {/* Task bar */}
-                        {idx === 0 && (
+                        {idx === 0 && tasks[0] && (
                           <div
-                            onClick={() => onSelectSlotTask(MOCK_TASKS[0])}
+                            onClick={() => onSelectSlotTask(tasks[0])}
                             className="absolute h-[28px] rounded-[6px] bg-[#F5A623]/95 text-black font-semibold text-[11px] font-mono px-2 flex items-center justify-between cursor-pointer shadow-md hover:ring-2 hover:ring-white transition-all z-10"
                             style={{ left: '6.5%', width: '16%' }}
                           >
-                            <span className="truncate">TSK-2043 (OHE Wire 4h)</span>
-                            {/* 10px Danger Conflict Triangle */}
-                            <span className="text-[#E5484D] text-[12px] font-bold ml-1" title="Conflict: Simultaneous USFD Track Block">
+                            <span className="truncate">{tasks[0].id} ({tasks[0].title.slice(0, 18)}...)</span>
+                            <span className="text-[#E5484D] text-[12px] font-bold ml-1" title="Conflict: Simultaneous Track Block">
                               ▲
                             </span>
                           </div>
                         )}
 
-                        {idx === 1 && (
+                        {idx === 1 && tasks[1] && (
                           <div
-                            onClick={() => onSelectSlotTask(MOCK_TASKS[1])}
+                            onClick={() => onSelectSlotTask(tasks[1])}
                             className="absolute h-[28px] rounded-[6px] bg-[#0070F3]/95 text-white font-medium text-[11px] font-mono px-2 flex items-center justify-between cursor-pointer shadow-md hover:ring-2 hover:ring-white transition-all z-10"
                             style={{ left: '8.5%', width: '12%' }}
                           >
-                            <span className="truncate">TSK-2044 (USFD 3h)</span>
+                            <span className="truncate">{tasks[1].id} ({tasks[1].title.slice(0, 18)}...)</span>
                           </div>
                         )}
 
-                        {idx === 2 && (
+                        {idx === 2 && tasks[2] && (
                           <div
-                            onClick={() => onSelectSlotTask(MOCK_TASKS[2])}
+                            onClick={() => onSelectSlotTask(tasks[2])}
                             className="absolute h-[28px] rounded-[6px] bg-[#8E4EC6]/95 text-white font-medium text-[11px] font-mono px-2 flex items-center justify-between cursor-pointer shadow-md hover:ring-2 hover:ring-white transition-all z-10"
                             style={{ left: '2.1%', width: '8.3%' }}
                           >
-                            <span className="truncate">TSK-1982 (Axle 2h)</span>
+                            <span className="truncate">{tasks[2].id} ({tasks[2].title.slice(0, 18)}...)</span>
                           </div>
                         )}
 
-                        {idx === 4 && (
+                        {idx === 4 && tasks[3] && (
                           <div
-                            onClick={() => onSelectSlotTask(MOCK_TASKS[4])}
+                            onClick={() => onSelectSlotTask(tasks[3])}
                             className="absolute h-[28px] rounded-[6px] bg-[#0070F3]/95 text-white font-medium text-[11px] font-mono px-2 flex items-center justify-between cursor-pointer shadow-md hover:ring-2 hover:ring-white transition-all z-10"
                             style={{ left: '45.8%', width: '20.8%' }}
                           >
-                            <span className="truncate">TSK-2051 (CSM-09 Ghat Tamping 5h)</span>
+                            <span className="truncate">{tasks[3].id} ({tasks[3].title.slice(0, 18)}...)</span>
                           </div>
                         )}
                       </div>
@@ -347,7 +346,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              {MOCK_TASKS.slice(5, 8).map((task) => (
+              {tasks.slice(4, 7).map((task: MaintenanceTaskItem) => (
                 <div
                   key={task.id}
                   onClick={() => onSelectSlotTask(task)}

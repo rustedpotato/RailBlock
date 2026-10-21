@@ -39,44 +39,53 @@ class BaselineScheduler:
         unscheduled = []
         total_minutes = 0
 
+        def _v(obj, key, default=None):
+            if hasattr(obj, key):
+                val = getattr(obj, key)
+                return val if val is not None else default
+            if isinstance(obj, dict):
+                val = obj.get(key)
+                return val if val is not None else default
+            return default
+
         # Track occupied time segments per window: window_id -> list of (start_dt, end_dt)
         window_occupancy: Dict[str, List[tuple]] = {
-            (getattr(w, "id", None) or w["id"]): [] for w in windows
+            _v(w, "id"): [] for w in windows
         }
 
         # Train intervals per corridor
         corridor_trains: Dict[str, List[tuple]] = {}
         for trn in trains:
-            c_id = getattr(trn, "corridor_id", None) or trn.get("corridor_id")
-            s_time = self._ensure_utc(getattr(trn, "scheduled_start", None) or trn.get("scheduled_start"))
-            e_time = self._ensure_utc(getattr(trn, "scheduled_end", None) or trn.get("scheduled_end"))
+            c_id = _v(trn, "corridor_id")
+            s_time = self._ensure_utc(_v(trn, "scheduled_start"))
+            e_time = self._ensure_utc(_v(trn, "scheduled_end"))
             corridor_trains.setdefault(c_id, []).append((s_time - buffer_delta, e_time + buffer_delta))
 
         for t in tasks:
-            t_id = getattr(t, "id", None) or t["id"]
-            t_dur = getattr(t, "duration_minutes", None) or t.get("duration_minutes")
-            t_corr = getattr(t, "corridor_id", None) or t.get("corridor_id")
-            t_earliest = self._ensure_utc(getattr(t, "earliest_start", None) or t.get("earliest_start"))
-            t_deadline = self._ensure_utc(getattr(t, "deadline", None) or t.get("deadline"))
-            t_title = getattr(t, "title", None) or t.get("title", f"Task {t_id}")
-            t_dept = getattr(t, "department", None) or t.get("department")
+            t_id = _v(t, "id")
+            t_dur = _v(t, "duration_minutes", 60)
+            t_corr = _v(t, "corridor_id")
+            t_earliest = self._ensure_utc(_v(t, "earliest_start"))
+            t_deadline = self._ensure_utc(_v(t, "deadline"))
+            t_title = _v(t, "title", f"Task {t_id}")
+            t_dept = _v(t, "department")
 
-            crit = getattr(t, "criticality", None) or t.get("criticality", 3)
-            urg = getattr(t, "urgency", None) or t.get("urgency", 3)
-            overdue = getattr(t, "overdue_days", None) or t.get("overdue_days", 0)
+            crit = _v(t, "criticality", 3)
+            urg = _v(t, "urgency", 3)
+            overdue = _v(t, "overdue_days", 0)
             score_res = self.priority_engine.calculate_priority(crit, urg, overdue, t_dept, duration_minutes=t_dur)
 
             assigned = False
 
             # Search available windows on same corridor
             for w in windows:
-                w_id = getattr(w, "id", None) or w["id"]
-                w_corr = getattr(w, "corridor_id", None) or w["corridor_id"]
+                w_id = _v(w, "id")
+                w_corr = _v(w, "corridor_id")
                 if w_corr != t_corr:
                     continue
 
-                w_start = self._ensure_utc(getattr(w, "start_time", None) or w["start_time"])
-                w_end = self._ensure_utc(getattr(w, "end_time", None) or w["end_time"])
+                w_start = self._ensure_utc(_v(w, "start_time"))
+                w_end = self._ensure_utc(_v(w, "end_time"))
 
                 # Try simple slot placement starting from max(w_start, t_earliest)
                 candidate_start = max(w_start, t_earliest)
@@ -133,7 +142,7 @@ class BaselineScheduler:
                     "department": t_dept
                 })
 
-        total_cap = sum(getattr(w, "available_capacity_minutes", None) or w["available_capacity_minutes"] for w in windows)
+        total_cap = sum(_v(w, "available_capacity_minutes", 0) for w in windows)
         utilization = round((total_minutes / total_cap * 100.0), 2) if total_cap > 0 else 0.0
 
         return {

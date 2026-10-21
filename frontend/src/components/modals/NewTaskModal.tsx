@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Buttons';
-import { SECTIONS } from '../../data/mockData';
+import { LINES } from '../../data/lines';
 import { MaintenanceTaskItem, Department } from '../../types/railblock';
+
+const ALL_SECTIONS = LINES.flatMap((l) => l.sections);
 
 interface NewTaskModalProps {
   isOpen: boolean;
@@ -13,7 +15,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onA
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState<Department>('TRACTION_DISTRIBUTION');
   const [assetId] = useState('');
-  const [section, setSection] = useState(SECTIONS[0]);
+  const [section, setSection] = useState(ALL_SECTIONS[0]);
   const [duration, setDuration] = useState(180);
   const [criticality, setCriticality] = useState(4);
   const [urgency, setUrgency] = useState(4);
@@ -103,7 +105,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({ isOpen, onClose, onA
                 onChange={(e) => setSection(e.target.value)}
                 className="w-full h-9 px-2 rounded-[6px] bg-[var(--bg)] border border-[var(--border)] text-xs text-[var(--fg)] outline-none"
               >
-                {SECTIONS.map((sec) => (
+                {ALL_SECTIONS.map((sec) => (
                   <option key={sec} value={sec}>{sec}</option>
                 ))}
               </select>

@@ -2,16 +2,40 @@ import React, { useState } from 'react';
 import { Button } from '../components/ui/Buttons';
 import { TabNav } from '../components/ui/Controls';
 import { StatusBadge, DepartmentChip } from '../components/ui/Badge';
-import { MOCK_PLANS, SECTIONS, MOCK_TASKS } from '../data/mockData';
+import { LINES } from '../data/lines';
+import { useLineData } from '../context/LineContext';
 import { MaintenancePlanInfo, UnscheduledTaskInfo } from '../types/railblock';
 import { Download, Calendar, HelpCircle, Lightbulb, FileText } from 'lucide-react';
 
 export const PlansView: React.FC = () => {
+  const { tasks } = useLineData();
   const [periodTab, setPeriodTab] = useState<'weekly' | 'monthly'>('weekly');
-  const [selectedPlanId, setSelectedPlanId] = useState<string>(MOCK_PLANS[0].id);
   const [fixModalTask, setFixModalTask] = useState<UnscheduledTaskInfo | null>(null);
 
-  const plan = MOCK_PLANS.find((p) => p.id === selectedPlanId) || MOCK_PLANS[0];
+  const SECTIONS = Array.from(new Set(LINES.flatMap((l) => l.sections as string[])));
+  const unscheduled: UnscheduledTaskInfo[] = tasks
+    .filter((t) => !t.assigned_slot)
+    .map((t) => ({
+      task_id: t.id,
+      title: t.title,
+      department: t.department,
+      reason: t.assigned_reason || 'No feasible block window found by the optimizer.',
+      suggested_fix: 'Extend the block window or re-run optimization with relaxed deadline.'
+    }));
+  const plan: MaintenancePlanInfo = {
+    id: 'live',
+    name: 'Live Optimized Plan',
+    version_type: 'Active' as MaintenancePlanInfo['version_type'],
+    week: 'Current week',
+    created_at: new Date().toISOString(),
+    scheduled_count: tasks.length - unscheduled.length,
+    unscheduled_tasks: unscheduled
+  };
+  const MOCK_PLANS = [plan];
+  const selectedPlanId = plan.id;
+  const setSelectedPlanId = (_id: string) => {};
+  const dayCount = (sec: string, dow: number) =>
+    tasks.filter((t) => t.section === sec && t.assigned_slot && new Date(t.earliest_start).getDay() === dow).length;
 
   return (
     <div className="space-y-6">
@@ -96,46 +120,27 @@ export const PlansView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)] text-xs">
-              {SECTIONS.map((sec, idx) => (
+              {SECTIONS.map((sec) => (
                 <tr key={sec} className="h-14 hover:bg-[var(--surface-hover)] transition-colors">
                   <td className="font-mono text-[12px] font-medium text-[var(--fg)] pr-2">
                     {sec}
                   </td>
-                  <td className="text-center p-1">
-                    <span className="inline-block px-2 py-1 rounded bg-[var(--surface-hover)] font-mono text-[11px] text-[var(--fg-muted)]">
-                      {idx % 2 === 0 ? '2 tasks' : '1 task'}
-                    </span>
-                  </td>
-                  <td className="text-center p-1">
-                    <span className="inline-block px-2 py-1 rounded bg-[#0070F3]/20 border border-[#0070F3]/30 font-mono text-[11px] text-[#0070F3] font-semibold">
-                      3 tasks
-                    </span>
-                  </td>
-                  <td className="text-center p-1">
-                    <span className="inline-block px-2 py-1 rounded bg-[#F5A623]/20 border border-[#F5A623]/30 font-mono text-[11px] text-[#F5A623] font-semibold">
-                      4 tasks (Mega)
-                    </span>
-                  </td>
-                  <td className="text-center p-1">
-                    <span className="inline-block px-2 py-1 rounded bg-[var(--surface-hover)] font-mono text-[11px] text-[var(--fg-muted)]">
-                      2 tasks
-                    </span>
-                  </td>
-                  <td className="text-center p-1">
-                    <span className="inline-block px-2 py-1 rounded bg-[var(--surface-hover)] font-mono text-[11px] text-[var(--fg-muted)]">
-                      1 task
-                    </span>
-                  </td>
-                  <td className="text-center p-1">
-                    <span className="inline-block px-2 py-1 rounded bg-[var(--surface-hover)] font-mono text-[11px] text-[var(--fg-muted)]">
-                      2 tasks
-                    </span>
-                  </td>
-                  <td className="text-center p-1">
-                    <span className="inline-block px-2 py-1 rounded hatched-band font-mono text-[11px] text-[var(--fg)] font-semibold">
-                      5 tasks (Mega)
-                    </span>
-                  </td>
+                  {[1, 2, 3, 4, 5, 6, 0].map((dow) => {
+                    const n = dayCount(sec, dow);
+                    return (
+                      <td key={dow} className="text-center p-1">
+                        <span
+                          className={`inline-block px-2 py-1 rounded font-mono text-[11px] ${
+                            n > 0
+                              ? 'bg-[#0070F3]/20 border border-[#0070F3]/30 text-[#0070F3] font-semibold'
+                              : 'bg-[var(--surface-hover)] text-[var(--fg-muted)]'
+                          }`}
+                        >
+                          {n} {n === 1 ? 'task' : 'tasks'}
+                        </span>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

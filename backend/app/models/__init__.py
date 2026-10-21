@@ -4,6 +4,7 @@ from app.models.task import MaintenanceTask
 from app.models.train import TrainSchedule
 from app.models.block_window import BlockWindow
 from app.models.plan import MaintenancePlan, ScheduledMaintenance, UnscheduledTaskRecord
+from app.models.ingest import Station, BlockNotice
 
 __all__ = [
     "Corridor",
@@ -14,4 +15,6 @@ __all__ = [
     "MaintenancePlan",
     "ScheduledMaintenance",
     "UnscheduledTaskRecord",
+    "Station",
+    "BlockNotice",
 ]

@@ -1,4 +1,4 @@
-import { Department, SectorCrew, SectorMachinery, SectorSupervisor } from '../types/railblock';
+﻿import { Department, SectorCrew, SectorMachinery, SectorSupervisor } from '../types/railblock';
 
 export interface SectorDefinition {
   id: Department;
@@ -110,17 +110,17 @@ export const SECTOR_MACHINERY: SectorMachinery[] = [
 
 export const SECTOR_SUPERVISORS: SectorSupervisor[] = [
   // Engg Supervisors
-  { id: 'SUP-ENG-01', name: 'R. K. Sharma', role: 'Senior Section Engineer (P-Way Fast)', department: 'ENGINEERING', phone: '+91 98201 44102' },
-  { id: 'SUP-ENG-02', name: 'M. Deshmukh', role: 'Assistant Divisional Engineer (ADEN Bridges)', department: 'ENGINEERING', phone: '+91 98202 55913' },
-  { id: 'SUP-ENG-03', name: 'S. K. Verma', role: 'Track Inspection Officer (P-Way Main)', department: 'ENGINEERING', phone: '+91 98203 77418' },
+  { id: 'SUP-ENG-01', name: 'R. K. Sharma', role: 'Senior Section Engineer (P-Way Fast)', department: 'ENGINEERING', phone: '+91 93228 46915' },
+  { id: 'SUP-ENG-02', name: 'M. Deshmukh', role: 'Assistant Divisional Engineer (ADEN Bridges)', department: 'ENGINEERING', phone: '+91 93228 46915' },
+  { id: 'SUP-ENG-03', name: 'S. K. Verma', role: 'Track Inspection Officer (P-Way Main)', department: 'ENGINEERING', phone: '+91 93228 46915' },
 
   // TRD Supervisors
-  { id: 'SUP-TRD-01', name: 'V. Patil', role: 'Senior Section Engineer (TRD / OHE)', department: 'TRACTION_DISTRIBUTION', phone: '+91 98205 11984' },
-  { id: 'SUP-TRD-02', name: 'S. Ramanathan', role: 'Assistant Electrical Engineer (Traction Power)', department: 'TRACTION_DISTRIBUTION', phone: '+91 98206 33201' },
-  { id: 'SUP-TRD-03', name: 'G. N. Chari', role: 'Traction Power Controller (TPC In-Charge)', department: 'TRACTION_DISTRIBUTION', phone: '+91 98207 44889' },
+  { id: 'SUP-TRD-01', name: 'V. Patil', role: 'Senior Section Engineer (TRD / OHE)', department: 'TRACTION_DISTRIBUTION', phone: '+91 93228 46915' },
+  { id: 'SUP-TRD-02', name: 'S. Ramanathan', role: 'Assistant Electrical Engineer (Traction Power)', department: 'TRACTION_DISTRIBUTION', phone: '+91 93228 46915' },
+  { id: 'SUP-TRD-03', name: 'G. N. Chari', role: 'Traction Power Controller (TPC In-Charge)', department: 'TRACTION_DISTRIBUTION', phone: '+91 93228 46915' },
 
   // S&T Supervisors
-  { id: 'SUP-SNT-01', name: 'K. Venkat', role: 'Senior Section Engineer (Signal Interlocking)', department: 'SIGNAL_TELECOMMUNICATION', phone: '+91 98209 88103' },
-  { id: 'SUP-SNT-02', name: 'P. Banerjee', role: 'Assistant Signal & Telecom Engineer (ASTE Suburban)', department: 'SIGNAL_TELECOMMUNICATION', phone: '+91 98208 99422' },
-  { id: 'SUP-SNT-03', name: 'A. R. Joshi', role: 'Chief Signal Inspector (Electronic Relay)', department: 'SIGNAL_TELECOMMUNICATION', phone: '+91 98204 66311' }
+  { id: 'SUP-SNT-01', name: 'K. Venkat', role: 'Senior Section Engineer (Signal Interlocking)', department: 'SIGNAL_TELECOMMUNICATION', phone: '+91 93228 46915' },
+  { id: 'SUP-SNT-02', name: 'P. Banerjee', role: 'Assistant Signal & Telecom Engineer (ASTE Suburban)', department: 'SIGNAL_TELECOMMUNICATION', phone: '+91 93228 46915' },
+  { id: 'SUP-SNT-03', name: 'A. R. Joshi', role: 'Chief Signal Inspector (Electronic Relay)', department: 'SIGNAL_TELECOMMUNICATION', phone: '+91 93228 46915' }
 ];
