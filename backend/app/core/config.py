@@ -1,7 +1,13 @@
-﻿from typing import List, Union
+from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
+
+
+from pathlib import Path
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+DEFAULT_DB_PATH = (BACKEND_DIR / "railblock.db").resolve().as_posix()
 
 
 class Settings(BaseSettings):
@@ -16,8 +22,14 @@ class Settings(BaseSettings):
         "http://localhost:3000",
     ]
 
-    # Database Configuration
-    DATABASE_URL: str = "sqlite:///./railblock.db"
+    # Database Configuration - defaults to backend/railblock.db regardless of CWD
+    DATABASE_URL: str = f"sqlite:///{DEFAULT_DB_PATH}"
+
+    # Cryptography & Security Configuration
+    SECRET_KEY: str = "railblock-sih26027-quantum-safe-sha256-operational-secret-mumbai"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    FIELD_ENCRYPTION_KEY: str = "dGVzdC1jcnlwdG8ta2V5LXJhaWxibG9jay1zaWgyNjAyNw=="
 
     # Gemini (Google Search grounded mega-block fetcher)
     GEMINI_API_KEY: str = ""

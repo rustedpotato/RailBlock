@@ -15,7 +15,7 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-[6px] transition-all outline-none focus:ring-2 focus:ring-[#0070F3] focus:ring-offset-2 focus:ring-offset-[var(--bg)] disabled:opacity-40 disabled:pointer-events-none select-none cursor-pointer';
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-[8px] transition-all outline-none focus:ring-2 focus:ring-[#FF6B35] focus:ring-offset-2 focus:ring-offset-[var(--bg)] disabled:opacity-40 disabled:pointer-events-none select-none cursor-pointer';
 
   const sizeStyles = {
     sm: 'h-[30px] px-3 text-xs gap-1.5',
@@ -24,8 +24,8 @@ export const Button: React.FC<ButtonProps> = ({
   }[size];
 
   const variantStyles = {
-    primary: 'bg-[var(--fg)] text-[var(--bg)] font-semibold hover:opacity-90 active:scale-[0.99]',
-    secondary: 'bg-transparent border border-[var(--border-strong)] text-[var(--fg)] hover:bg-[var(--surface-hover)] active:scale-[0.99]',
+    primary: 'bg-[#FF6B35] hover:bg-[#E85923] text-white font-semibold shadow-xs active:scale-[0.99]',
+    secondary: 'bg-[var(--surface)] border border-[var(--border-strong)] text-[var(--fg)] hover:bg-[var(--surface-hover)] active:scale-[0.99]',
     ghost: 'bg-transparent text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)] active:scale-[0.99]',
     destructive: 'bg-[var(--danger)] text-white hover:opacity-90 active:scale-[0.99]'
   }[variant];

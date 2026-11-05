@@ -54,6 +54,7 @@ export const useRealtimeFeed = (): UseRealtimeFeedReturn => {
   // Connect WebSocket with auto-reconnection and polling fallback
   useEffect(() => {
     let unmounted = false;
+    let retryAttempts = 0;
 
     const connectWebSocket = () => {
       try {
@@ -69,6 +70,7 @@ export const useRealtimeFeed = (): UseRealtimeFeedReturn => {
           if (unmounted) return;
           console.log('[RealtimeFeed] WebSocket connection established');
           setIsConnected(true);
+          retryAttempts = 0;
           // Cancel any fallback polling while WS is healthy
           if (pollTimerRef.current) {
             clearInterval(pollTimerRef.current);
@@ -98,16 +100,20 @@ export const useRealtimeFeed = (): UseRealtimeFeedReturn => {
         ws.onclose = () => {
           if (unmounted) return;
           setIsConnected(false);
-          console.log('[RealtimeFeed] WebSocket disconnected. Attempting reconnect in 3s...');
 
-          // Fallback to polling every 3 seconds
+          // Calculate exponential backoff delay with random jitter (prevents thundering herd)
+          const backoffDelay = Math.min(15000, 1500 * Math.pow(1.4, retryAttempts)) + Math.floor(Math.random() * 600);
+          retryAttempts++;
+          console.log(`[RealtimeFeed] WebSocket disconnected. Reconnecting in ${(backoffDelay / 1000).toFixed(1)}s (attempt ${retryAttempts})...`);
+
+          // Fallback to polling every 3 seconds while disconnected
           if (!pollTimerRef.current) {
             pollTimerRef.current = setInterval(refreshSnapshot, 3000);
           }
 
           reconnectTimerRef.current = setTimeout(() => {
             if (!unmounted) connectWebSocket();
-          }, 3000);
+          }, backoffDelay);
         };
       } catch (err) {
         console.warn('[RealtimeFeed] WebSocket initiation failed, using polling fallback', err);

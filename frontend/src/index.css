@@ -3,47 +3,66 @@
 @tailwind utilities;
 
 :root {
-  /* Dark Theme Tokens (Default) */
-  --bg: #000000;
-  --bg-2: #0A0A0A;
-  --surface: #111111;
-  --surface-hover: #1A1A1A;
-  --border: #242424;
-  --border-strong: #454545;
-  --fg: #EDEDED;
-  --fg-muted: #A1A1A1;
-  --fg-subtle: #6B6B6B;
-  --accent: #0070F3;
-  --success: #45A557;
-  --warning: #F5A623;
-  --danger: #E5484D;
-  --shadow-drawer: 0 8px 30px rgba(0, 0, 0, 0.5);
+  /* PANTONE Theme Palette: Wheat (Main) + Magnetic Blue (Text) + Carrot (Accents) */
+  --bg: #F7F2E7;              /* Pantone 13-1016 TPG Wheat Canvas */
+  --bg-2: #EFE6D5;            /* Rich Wheat Sidebar & Header Background */
+  --surface: #FFFDF9;         /* Warm Ivory-Wheat Card Surface */
+  --surface-hover: #E8DCBE;   /* Soft Wheat Hover */
+  --border: #DFCEB2;          /* Subtle Wheat Border */
+  --border-strong: #C4AA84;   /* Defined Wheat Accent Border */
+  --fg: #0F2452;              /* Pantone 20-0146 TPM Magnetic Blue Text */
+  --fg-muted: #27457D;        /* Medium Magnetic Blue Secondary Text */
+  --fg-subtle: #4D6FA8;       /* Light Magnetic Blue Subtitle & Meta Text */
+  --accent: #FF6B35;          /* Pantone 16-1361 TCX Carrot Orange */
+  --success: #15803D;         /* Railway Operational Clear Green */
+  --warning: #FF6B35;         /* Carrot Orange */
+  --danger: #DC2626;          /* Urgent Conflict Red */
+  --shadow-drawer: 0 8px 30px rgba(92, 64, 30, 0.12);
 
-  --dept-eng: #0070F3;
-  --dept-trd: #F5A623;
-  --dept-st: #8E4EC6;
+  --dept-eng: #1D4ED8;        /* Magnetic Blue */
+  --dept-trd: #FF6B35;        /* Carrot Orange */
+  --dept-st: #7C3AED;         /* S&T Violet */
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html.light, body.theme-light {
-  /* Light Theme Tokens */
-  --bg: #FFFFFF;
-  --bg-2: #FAFAFA;
-  --surface: #FFFFFF;
-  --surface-hover: #F5F5F5;
-  --border: #EAEAEA;
-  --border-strong: #C9C9C9;
-  --fg: #171717;
-  --fg-muted: #666666;
-  --fg-subtle: #8F8F8F;
-  --accent: #0070F3;
-  --success: #107A3E;
-  --warning: #B26B00;
-  --danger: #CC1F24;
-  --shadow-drawer: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --bg: #F7F2E7;
+  --bg-2: #EFE6D5;
+  --surface: #FFFDF9;
+  --surface-hover: #E8DCBE;
+  --border: #DFCEB2;
+  --border-strong: #C4AA84;
+  --fg: #0F2452;
+  --fg-muted: #27457D;
+  --fg-subtle: #4D6FA8;
+  --accent: #FF6B35;
+  --success: #15803D;
+  --warning: #FF6B35;
+  --danger: #DC2626;
+  --shadow-drawer: 0 8px 30px rgba(92, 64, 30, 0.12);
 
   color-scheme: light;
+}
+
+html.dark, body.theme-dark {
+  /* True Pure Black Night Mode with Wheat Typography and Carrot Orange Accents */
+  --bg: #000000;              /* Base Color: Pure Black */
+  --bg-2: #0A0A0A;            /* Deep Black Sidebar & Header */
+  --surface: #121212;         /* Rich Charcoal Black Surface */
+  --surface-hover: #1E1E1E;   /* Subtle Dark Hover */
+  --border: #262626;          /* Dark Boundary Border */
+  --border-strong: #3D3D3D;   /* Strong Boundary */
+  --fg: #F5EBD7;              /* Pantone Wheat text */
+  --fg-muted: #93C5FD;        /* Light Magnetic Blue secondary text */
+  --fg-subtle: #60A5FA;       /* Muted Light Blue caption text */
+  --accent: #FF6B35;          /* Pantone Carrot Orange */
+  --success: #34D399;         /* Clear Emerald */
+  --warning: #FF6B35;         /* Carrot Orange */
+  --danger: #F87171;          /* Red */
+  --shadow-drawer: 0 8px 30px rgba(0, 0, 0, 0.85);
+
+  color-scheme: dark;
 }
 
 body {

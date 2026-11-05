@@ -25,6 +25,10 @@ build/
 *.sqlite
 *.sqlite3
 railblock.db
+railblock.db-wal
+railblock.db-shm
+*.db-wal
+*.db-shm
 
 # IDE & Editor
 .vscode/

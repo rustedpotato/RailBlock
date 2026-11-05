@@ -124,25 +124,46 @@ export const Shell: React.FC<ShellProps> = ({
 
   const { role, user, isAdmin, isUser, switchRole } = useAuth();
 
-  const navItems = isUser
+  const navSections = isUser
     ? [
-        { id: 'live-viewer', label: 'Works & Regulated Trains', icon: Train },
-        { id: 'blocks', label: 'Blocks Timetable', icon: Clock }
+        {
+          title: 'Passenger Portal',
+          items: [
+            { id: 'live-viewer', label: 'Works & Regulated Trains', icon: Train },
+            { id: 'blocks', label: 'Blocks Timetable', icon: Clock }
+          ]
+        }
       ]
     : [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'pipeline', label: 'Data Pipeline & Dataset', icon: Database },
-        { id: 'sectors', label: 'Sector Assignment', icon: Wrench },
-        { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-        { id: 'scheduler', label: 'Scheduler', icon: CalendarDays },
-        { id: 'conflicts', label: 'Conflicts', icon: AlertTriangle },
-        { id: 'plans', label: 'Plans', icon: FileText },
-        { id: 'compare', label: 'Compare', icon: GitCompare },
-        { id: 'assets', label: 'Assets', icon: Cpu },
-        { id: 'blocks', label: 'Blocks & Timetable', icon: Clock }
+        {
+          title: 'Operations',
+          items: [
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'scheduler', label: 'Scheduler', icon: CalendarDays },
+            { id: 'conflicts', label: 'Conflicts', icon: AlertTriangle },
+            { id: 'blocks', label: 'Blocks & Timetable', icon: Clock }
+          ]
+        },
+        {
+          title: 'Planning & Tasks',
+          items: [
+            { id: 'tasks', label: 'Tasks', icon: CheckSquare },
+            { id: 'plans', label: 'Plans', icon: FileText },
+            { id: 'compare', label: 'Compare', icon: GitCompare }
+          ]
+        },
+        {
+          title: 'Administration',
+          items: [
+            { id: 'sectors', label: 'Sector Assignment', icon: Wrench },
+            { id: 'assets', label: 'Assets', icon: Cpu },
+            { id: 'pipeline', label: 'Data Pipeline & Dataset', icon: Database }
+          ]
+        }
       ];
 
-  const currentNav = navItems.find((n) => n.id === currentTab) || navItems[0];
+  const allNavItems = navSections.flatMap((s) => s.items);
+  const currentNav = allNavItems.find((n) => n.id === currentTab) || allNavItems[0];
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--fg)] flex flex-col md:flex-row antialiased select-none font-sans">
@@ -323,49 +344,39 @@ export const Shell: React.FC<ShellProps> = ({
           </div>
         </div>
 
-        {/* Navigation Items (36px tall, 6px radius, 16px line icons) */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onSelectTab(item.id)}
-                className={`w-full h-[36px] px-3 rounded-[6px] flex items-center gap-3 text-[13px] font-medium transition-colors cursor-pointer text-left ${
-                  active
-                    ? 'bg-[var(--surface-hover)] text-[var(--fg)] font-semibold shadow-xs'
-                    : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)]'
-                }`}
-              >
-                <Icon size={16} className={active ? 'text-[var(--fg)]' : 'text-[var(--fg-muted)]'} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        {/* Grouped Navigation Items (34px tall, 7px radius, grouped by domain) */}
+        <nav className="flex-1 px-3 py-2 space-y-4 overflow-y-auto">
+          {navSections.map((section) => (
+            <div key={section.title} className="space-y-1">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle)] px-2.5 py-0.5">
+                {section.title}
+              </div>
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = currentTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onSelectTab(item.id)}
+                      className={`w-full h-[34px] px-2.5 rounded-[7px] flex items-center gap-2.5 text-[13px] font-medium transition-all cursor-pointer text-left ${
+                        active
+                          ? 'bg-[var(--surface)] text-[var(--fg)] font-semibold shadow-xs border-l-[3px] border-[#FF6B35]'
+                          : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)]'
+                      }`}
+                    >
+                      <Icon
+                        size={15}
+                        className={active ? 'text-[#FF6B35]' : 'text-[var(--fg-subtle)]'}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
-
-        {/* Line quick-switch chips */}
-        <div className="px-3 pb-3 space-y-1">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle)] px-1 pb-1">Lines</div>
-          {LINES.map((l) => {
-            const active = selectedLine === l.id;
-            return (
-              <button
-                key={l.id}
-                onClick={() => setSelectedLine(active ? 'all' : l.id)}
-                className={`w-full h-[30px] px-2.5 rounded-[6px] flex items-center gap-2.5 text-[12px] transition-colors cursor-pointer ${
-                  active ? 'text-[var(--fg)] font-semibold' : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)]'
-                }`}
-                style={active ? { background: `${l.color}1F` } : undefined}
-              >
-                <span className="w-2 h-2 rounded-full" style={{ background: l.color }} />
-                <span className="flex-1 text-left">{l.name}</span>
-                <span className="text-[10px] font-mono text-[var(--fg-subtle)]">{l.sections.length}</span>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Sidebar Footer: Theme switcher, User Avatar, Settings */}
         <div className="p-3 border-t border-[var(--border)] space-y-3 bg-[var(--bg-2)]">
@@ -685,32 +696,36 @@ export const Shell: React.FC<ShellProps> = ({
                 </div>
               </div>
 
-              {/* All 8 Navigation items */}
-              <div className="space-y-1 pt-2">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle)] block mb-1">
-                  System Views
-                </span>
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = currentTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        onSelectTab(item.id);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`w-full h-[38px] px-3 rounded-[6px] flex items-center gap-3 text-[13px] font-medium transition-colors text-left cursor-pointer ${
-                        active
-                          ? 'bg-[var(--surface-hover)] text-[var(--fg)] font-semibold border-l-2 border-[#0070F3]'
-                          : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)]'
-                      }`}
-                    >
-                      <Icon size={16} />
-                      <span className="flex-1">{item.label}</span>
-                    </button>
-                  );
-                })}
+              {/* Navigation items grouped */}
+              <div className="space-y-3 pt-2">
+                {navSections.map((sec) => (
+                  <div key={sec.title} className="space-y-1">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--fg-subtle)] block px-1">
+                      {sec.title}
+                    </span>
+                    {sec.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = currentTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            onSelectTab(item.id);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full h-[38px] px-3 rounded-[6px] flex items-center gap-3 text-[13px] font-medium transition-colors text-left cursor-pointer ${
+                            active
+                              ? 'bg-[var(--surface-hover)] text-[var(--fg)] font-semibold border-l-2 border-[#FF6B35]'
+                              : 'text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--surface-hover)]'
+                          }`}
+                        >
+                          <Icon size={16} className={active ? 'text-[#FF6B35]' : 'text-[var(--fg-subtle)]'} />
+                          <span className="flex-1">{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -751,7 +766,7 @@ export const Shell: React.FC<ShellProps> = ({
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[var(--bg-2)]/95 backdrop-blur-md border-t border-[var(--border)] z-40 flex items-center justify-around px-1">
-        {navItems.slice(0, 4).map((item) => {
+        {allNavItems.slice(0, 4).map((item) => {
           const Icon = item.icon;
           const active = currentTab === item.id;
           return (

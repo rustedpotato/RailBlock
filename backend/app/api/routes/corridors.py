@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.db.session import get_db
@@ -14,6 +14,8 @@ router = APIRouter(prefix="/corridors", tags=["Railway Corridors"])
 
 
 class CorridorSummaryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     code: str
     name: str
@@ -25,34 +27,51 @@ class CorridorSummaryResponse(BaseModel):
     train_count: int
     block_window_count: int
 
-    class Config:
-        from_attributes = True
-
 
 @router.get("", response_model=List[CorridorSummaryResponse], summary="List All Railway Corridors with Dataset Aggregations")
 def list_corridors(db: Session = Depends(get_db)):
     """
     Returns all registered corridors with counts of physical assets, pending maintenance tasks,
-    timetabled trains, and block windows in the SQLite database.
+    timetabled trains, and block windows in the database using efficient aggregated queries.
     """
     corridors = db.query(Corridor).all()
-    result = []
-    for c in corridors:
-        asset_count = db.query(Asset).filter(Asset.corridor_id == c.id).count()
-        task_count = db.query(MaintenanceTask).filter(MaintenanceTask.corridor_id == c.id).count()
-        train_count = db.query(TrainSchedule).filter(TrainSchedule.corridor_id == c.id).count()
-        bw_count = db.query(BlockWindow).filter(BlockWindow.corridor_id == c.id).count()
+    if not corridors:
+        return []
 
-        result.append(CorridorSummaryResponse(
+    # Efficient aggregate queries grouped by corridor_id (prevents N+1 database queries)
+    asset_counts = dict(
+        db.query(Asset.corridor_id, func.count(Asset.id))
+        .group_by(Asset.corridor_id)
+        .all()
+    )
+    task_counts = dict(
+        db.query(MaintenanceTask.corridor_id, func.count(MaintenanceTask.id))
+        .group_by(MaintenanceTask.corridor_id)
+        .all()
+    )
+    train_counts = dict(
+        db.query(TrainSchedule.corridor_id, func.count(TrainSchedule.id))
+        .group_by(TrainSchedule.corridor_id)
+        .all()
+    )
+    bw_counts = dict(
+        db.query(BlockWindow.corridor_id, func.count(BlockWindow.id))
+        .group_by(BlockWindow.corridor_id)
+        .all()
+    )
+
+    return [
+        CorridorSummaryResponse(
             id=c.id,
             code=c.code,
             name=c.name,
             description=c.description,
             zone=c.zone,
             total_km=c.total_km,
-            asset_count=asset_count,
-            task_count=task_count,
-            train_count=train_count,
-            block_window_count=bw_count
-        ))
-    return result
+            asset_count=asset_counts.get(c.id, 0),
+            task_count=task_counts.get(c.id, 0),
+            train_count=train_counts.get(c.id, 0),
+            block_window_count=bw_counts.get(c.id, 0),
+        )
+        for c in corridors
+    ]

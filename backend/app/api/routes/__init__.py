@@ -1,4 +1,4 @@
-﻿from app.api.routes.health import router as health_router
+from app.api.routes.health import router as health_router
 from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.tasks import router as tasks_router
 from app.api.routes.assets import router as assets_router
@@ -10,6 +10,8 @@ from app.api.routes.corridors import router as corridors_router
 from app.api.routes.pipeline import router as pipeline_router
 from app.api.routes.ingest import router as ingest_router
 from app.api.routes.dispatch import router as dispatch_router
+from app.api.routes.security_routes import router as security_router
+from app.api.routes.optimizer_routes import router as optimizer_router
 
 __all__ = [
     "health_router",
@@ -24,4 +26,6 @@ __all__ = [
     "pipeline_router",
     "ingest_router",
     "dispatch_router",
+    "security_router",
+    "optimizer_router",
 ]

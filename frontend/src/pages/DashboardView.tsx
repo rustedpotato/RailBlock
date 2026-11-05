@@ -7,7 +7,7 @@ import { LineBadge } from '../components/ui/LineBadge';
 import { useLine, useLineData } from '../context/LineContext';
 import { getLine } from '../data/lines';
 import { MaintenanceTaskItem, ConflictItem } from '../types/railblock';
-import { AlertTriangle, ArrowRight, CheckCircle2, ShieldCheck, Clock } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, ShieldCheck, Clock, ChevronDown, ChevronUp, Zap, Sparkles } from 'lucide-react';
 
 import { LiveTelemetryMonitor } from '../components/ui/LiveTelemetryMonitor';
 
@@ -23,12 +23,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onResolveConflict
 }) => {
   const [timeRange, setTimeRange] = useState<'week' | 'month'>('week');
+  const [showTelemetry, setShowTelemetry] = useState<boolean>(false);
   const { selectedLine } = useLine();
   const activeLine = getLine(selectedLine);
   const lineData = useLineData();
 
-  const topTasks = lineData.MOCK_TASKS.slice(0, 8);
-  const activeConflicts = lineData.MOCK_CONFLICTS.filter(c => c.status === 'ACTIVE').slice(0, 5);
+  const topTasks = lineData.MOCK_TASKS.slice(0, 5);
+  const activeConflicts = lineData.MOCK_CONFLICTS.filter(c => c.status === 'ACTIVE').slice(0, 4);
 
   const allSectionUtilization = [
     // Central Line
@@ -152,8 +153,97 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         />
       </div>
 
-      {/* 2.5 Real-Time Track & Train Telemetry Feed */}
-      <LiveTelemetryMonitor />
+      {/* 2.2 Admin Action & Decision Center */}
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] p-4 sm:p-5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[10px] bg-[#FF6B35]/15 border border-[#FF6B35]/30 flex items-center justify-center text-[#FF6B35] shrink-0">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-[15px] font-semibold text-[var(--fg)]">
+                  Admin Action Center
+                </h2>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#FF6B35] text-white">
+                  {activeConflicts.length} ACTION{activeConflicts.length === 1 ? '' : 'S'} PENDING
+                </span>
+              </div>
+              <p className="text-[12px] text-[var(--fg-muted)] mt-0.5">
+                Streamlined dispatch tools: corridor conflict mitigation, solver triggers, and sector crew dispatch.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {activeConflicts.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onResolveConflict(activeConflicts[0])}
+                className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-[8px] text-xs font-semibold bg-[#FF6B35] hover:bg-[#E85923] text-white shadow-xs cursor-pointer transition-all"
+                title="Open quick resolution modal for top active conflict"
+              >
+                <AlertTriangle size={13} />
+                <span>Resolve Conflict ({activeConflicts[0].id})</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('scheduler')}
+              className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-[8px] text-xs font-medium bg-[var(--surface-hover)] border border-[var(--border-strong)] text-[var(--fg)] hover:border-[#FF6B35] transition-all cursor-pointer"
+            >
+              <Sparkles size={13} className="text-[#FF6B35]" />
+              <span>Review Schedule</span>
+              <ArrowRight size={13} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab('sectors')}
+              className="inline-flex items-center gap-1.5 h-[34px] px-3.5 rounded-[8px] text-xs font-medium bg-[var(--surface-hover)] border border-[var(--border-strong)] text-[var(--fg)] hover:border-[#FF6B35] transition-all cursor-pointer"
+            >
+              <span>Auto-Assign Field Units</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 2.3 Collapsible Live Telemetry & Simulation Feed */}
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] overflow-hidden transition-all">
+        <div
+          onClick={() => setShowTelemetry(!showTelemetry)}
+          className="flex items-center justify-between px-4 py-3 bg-[var(--surface)] hover:bg-[var(--surface-hover)] cursor-pointer select-none transition-colors"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowTelemetry(!showTelemetry); }}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#15803D] animate-pulse shrink-0" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--fg)] font-mono">
+              Live Railway Telemetry & Kavach Signaling
+            </span>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-[#15803D]/10 text-[#15803D] border border-[#15803D]/20">
+              STREAM CONNECTED
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono text-[var(--fg-subtle)]">
+              {showTelemetry ? 'Hide Simulator' : 'Show Simulator & Flaw Injections'}
+            </span>
+            <span className="p-1 rounded bg-[var(--surface-hover)] text-[var(--fg)]">
+              {showTelemetry ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </span>
+          </div>
+        </div>
+
+        {showTelemetry && (
+          <div className="p-4 border-t border-[var(--border)] animate-fade-in bg-[var(--bg)]">
+            <LiveTelemetryMonitor />
+          </div>
+        )}
+      </div>
 
       {/* 3. Schedule Timeline Preview (Compact 7-day Gantt) */}
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-[12px] p-5 space-y-4">
@@ -508,7 +598,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <button
               type="button"
               onClick={() => onNavigateTab('sectors')}
-              className="text-xs font-semibold text-[#0070F3] hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer"
+              className="text-xs font-semibold text-[#FF6B35] hover:underline flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
             >
               <span>Manage Sector Field Units & Task Assignments (Engg · TRD · S&T)</span>
               <ArrowRight size={13} />

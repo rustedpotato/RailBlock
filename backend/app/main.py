@@ -1,6 +1,6 @@
-﻿import logging
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.base import Base
@@ -18,6 +18,8 @@ from app.api.routes import (
     pipeline_router,
     ingest_router,
     dispatch_router,
+    security_router,
+    optimizer_router,
 )
 from app.services.live_telemetry_engine import telemetry_engine
 
@@ -91,6 +93,8 @@ api_routers = [
     pipeline_router,
     ingest_router,
     dispatch_router,
+    security_router,
+    optimizer_router,
 ]
 
 for r in api_routers:
@@ -113,6 +117,20 @@ possible_dist_paths = [
 ]
 frontend_dist = next((p for p in possible_dist_paths if os.path.isdir(p)), None)
 
+def get_root_info():
+    """Root info dictionary providing basic API orientation."""
+    return {
+        "project": settings.PROJECT_NAME,
+        "problem_statement": "SIH26027",
+        "description": "AI-Powered Automatic Block Planning for Indian Railways",
+        "docs_url": "/docs",
+        "health_check": "/api/health",
+        "dashboard_summary": "/api/dashboard/summary",
+        "tasks_endpoint": "/api/tasks",
+        "schedules_endpoint": "/api/schedules"
+    }
+
+
 if frontend_dist:
     logger.info(f"Serving built React frontend from: {frontend_dist}")
     assets_dir = os.path.join(frontend_dist, "assets")
@@ -120,10 +138,13 @@ if frontend_dist:
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     @app.get("/{full_path:path}", tags=["Frontend SPA"])
-    async def serve_spa(full_path: str):
+    async def serve_spa(request: Request, full_path: str):
         # Don't intercept API or docs routes
         if full_path.startswith(("api", "ws", "docs", "redoc", "openapi.json")):
             return None
+        # Return JSON root info if requested by API clients / test suites
+        if full_path == "" and "text/html" not in request.headers.get("accept", ""):
+            return get_root_info()
         file_path = os.path.join(frontend_dist, full_path)
         if full_path and os.path.isfile(file_path):
             return FileResponse(file_path)
@@ -133,17 +154,7 @@ else:
 
     @app.get("/", tags=["System"])
     def root_info():
-        """Root info endpoint providing basic API orientation."""
-        return {
-            "project": settings.PROJECT_NAME,
-            "problem_statement": "SIH26027",
-            "description": "AI-Powered Automatic Block Planning for Indian Railways",
-            "docs_url": "/docs",
-            "health_check": "/api/health",
-            "dashboard_summary": "/api/dashboard/summary",
-            "tasks_endpoint": "/api/tasks",
-            "schedules_endpoint": "/api/schedules"
-        }
+        return get_root_info()
 
 
 if __name__ == "__main__":

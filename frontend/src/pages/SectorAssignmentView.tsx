@@ -19,8 +19,12 @@ import {
   AlertTriangle,
   FileCheck,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Layers,
-  Sparkles
+  Sparkles,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 
 interface SectorAssignmentViewProps {
@@ -36,6 +40,8 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
   const [selectedSectorFilter, setSelectedSectorFilter] = useState<Department | 'ALL'>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCompactMode, setIsCompactMode] = useState<boolean>(false);
+  const [columnLimits, setColumnLimits] = useState<Record<string, number>>({});
 
   // Filter tasks based on line, sector, and search
   const filteredTasks = useMemo(() => {
@@ -173,7 +179,37 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Card Density Toggle */}
+          <div className="flex items-center gap-1 bg-[var(--surface)] p-1 rounded-[8px] border border-[var(--border)] text-xs">
+            <button
+              type="button"
+              onClick={() => setIsCompactMode(false)}
+              className={`px-2.5 py-1 rounded-[5px] flex items-center gap-1.5 transition-all cursor-pointer ${
+                !isCompactMode
+                  ? 'bg-[#FF6B35] text-white font-semibold shadow-xs'
+                  : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+              }`}
+              title="Full detailed cards with crew & equipment"
+            >
+              <LayoutGrid size={13} />
+              <span>Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCompactMode(true)}
+              className={`px-2.5 py-1 rounded-[5px] flex items-center gap-1.5 transition-all cursor-pointer ${
+                isCompactMode
+                  ? 'bg-[#FF6B35] text-white font-semibold shadow-xs'
+                  : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+              }`}
+              title="Compact rows to quickly scan through long assigned lists"
+            >
+              <List size={13} />
+              <span>Compact</span>
+            </button>
+          </div>
+
           {filteredTasks.length > 0 && (
             <Button
               variant="primary"
@@ -380,6 +416,9 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
         {stages.map((stage) => {
           const list = pipeline[stage.id] || [];
           const Icon = stage.icon;
+          const defaultLimit = stage.id === 'ASSIGNED' ? 5 : 8;
+          const currentLimit = columnLimits[stage.id] ?? defaultLimit;
+          const visibleTasks = list.slice(0, currentLimit);
 
           return (
             <div
@@ -414,15 +453,110 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                 </span>
               </div>
 
-              {/* Task Cards in Column */}
-              <div className="space-y-2.5 flex-1">
+              {/* Task Cards in Column (Bounded height + custom scrollbar prevents long column distortion) */}
+              <div className="space-y-2 overflow-y-auto max-h-[580px] pr-1 flex-1">
                 {list.length === 0 ? (
                   <div className="h-32 flex flex-col items-center justify-center text-center p-3 rounded-[8px] border border-dashed border-[var(--border)] text-[var(--fg-subtle)] text-xs">
                     <span>No tasks in this stage</span>
                   </div>
                 ) : (
-                  list.map((task) => {
+                  visibleTasks.map((task) => {
                     const sectorDef = SECTORS[task.department];
+
+                    if (isCompactMode) {
+                      return (
+                        <div
+                          key={task.id}
+                          className="p-2.5 rounded-[8px] bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--border-strong)] transition-all space-y-1.5 shadow-xs text-left"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <LineBadge section={task.section} variant="short" />
+                              <button
+                                type="button"
+                                onClick={() => onSelectTask(task)}
+                                className="font-mono text-[11px] font-bold text-[var(--fg)] hover:text-[#FF6B35] transition-colors"
+                              >
+                                {task.id}
+                              </button>
+                            </div>
+                            <span
+                              className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase"
+                              style={{
+                                backgroundColor: sectorDef.badgeBg,
+                                color: sectorDef.color,
+                                border: `1px solid ${sectorDef.badgeBorder}`
+                              }}
+                            >
+                              {sectorDef.code}
+                            </span>
+                          </div>
+
+                          <div
+                            onClick={() => onSelectTask(task)}
+                            className="text-xs font-medium text-[var(--fg)] truncate cursor-pointer hover:text-[#FF6B35]"
+                            title={task.title}
+                          >
+                            {task.title}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1 border-t border-[var(--border)] text-[10px]">
+                            <span className="truncate max-w-[110px] text-[var(--fg-muted)] font-mono flex items-center gap-1">
+                              <Users size={10} className="shrink-0 text-[#FF6B35]" />
+                              <span className="truncate">{task.assigned_crew ? task.assigned_crew.split('(')[0].trim() : 'Unassigned'}</span>
+                            </span>
+
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => onOpenAssignModal(task)}
+                                className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--surface-hover)] text-[var(--fg)] hover:border-[#FF6B35] border border-transparent transition-all cursor-pointer"
+                              >
+                                Edit
+                              </button>
+                              {stage.id === 'ASSIGNED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateSectorStatus(task.id, 'PERMIT_ISSUED', 'Line block permit granted')}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#FF6B35]/15 text-[#FF6B35] hover:bg-[#FF6B35]/25 transition-colors cursor-pointer"
+                                >
+                                  Permit →
+                                </button>
+                              )}
+                              {stage.id === 'REQUISITIONED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateSectorStatus(task.id, 'ASSIGNED', 'Quick-assigned by Admin')}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#1D4ED8]/15 text-[#1D4ED8] hover:bg-[#1D4ED8]/25 transition-colors cursor-pointer"
+                                >
+                                  Dispatch →
+                                </button>
+                              )}
+                              {stage.id === 'PERMIT_ISSUED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateSectorStatus(task.id, 'IN_PROGRESS', 'Work started on track')}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#DC2626]/15 text-[#DC2626] hover:bg-[#DC2626]/25 transition-colors cursor-pointer"
+                                >
+                                  Start →
+                                </button>
+                              )}
+                              {stage.id === 'IN_PROGRESS' && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateSectorStatus(task.id, 'FIT_CERTIFIED', 'Track fit certificate signed')}
+                                  className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#15803D]/15 text-[#15803D] hover:bg-[#15803D]/25 transition-colors cursor-pointer"
+                                >
+                                  Fit ✓
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // Detailed Card
                     return (
                       <div
                         key={task.id}
@@ -433,7 +567,7 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                           <button
                             type="button"
                             onClick={() => onSelectTask(task)}
-                            className="font-mono text-[11px] font-bold text-[var(--fg)] hover:text-[#0070F3] transition-colors"
+                            className="font-mono text-[11px] font-bold text-[var(--fg)] hover:text-[#FF6B35] transition-colors"
                           >
                             {task.id}
                           </button>
@@ -454,7 +588,7 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                           onClick={() => onSelectTask(task)}
                           className="cursor-pointer"
                         >
-                          <h5 className="text-xs font-medium text-[var(--fg)] leading-snug line-clamp-2 hover:text-[#0070F3] transition-colors">
+                          <h5 className="text-xs font-medium text-[var(--fg)] leading-snug line-clamp-2 hover:text-[#FF6B35] transition-colors">
                             {task.title}
                           </h5>
                           <div className="mt-1 flex items-center gap-1">
@@ -469,11 +603,11 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                         <div className="space-y-1 pt-1 border-t border-[var(--border)] text-[10px]">
                           {task.assigned_crew ? (
                             <div className="flex items-center gap-1.5 text-[var(--fg)] truncate">
-                              <Users size={11} className="text-[#0070F3] shrink-0" />
+                              <Users size={11} className="text-[#FF6B35] shrink-0" />
                               <span className="truncate font-medium">{task.assigned_crew}</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1.5 text-[#F5A623] italic">
+                            <div className="flex items-center gap-1.5 text-[#FF6B35] italic">
                               <Users size={11} className="shrink-0" />
                               <span>Crew Unassigned</span>
                             </div>
@@ -481,14 +615,14 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
 
                           {task.assigned_equipment && (
                             <div className="flex items-center gap-1.5 text-[var(--fg-subtle)] truncate">
-                              <Cpu size={11} className="text-[#F5A623] shrink-0" />
+                              <Cpu size={11} className="text-[#FF6B35] shrink-0" />
                               <span className="truncate">{task.assigned_equipment}</span>
                             </div>
                           )}
 
                           {task.supervisor && (
                             <div className="flex items-center gap-1.5 text-[var(--fg-subtle)] truncate">
-                              <FileCheck size={11} className="text-[#8E4EC6] shrink-0" />
+                              <FileCheck size={11} className="text-[#7C3AED] shrink-0" />
                               <span className="truncate">{task.supervisor}</span>
                             </div>
                           )}
@@ -498,17 +632,17 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                         {(task.speed_restriction || task.power_isolation || task.signal_disconnection) && (
                           <div className="flex flex-wrap gap-1 pt-1">
                             {task.speed_restriction && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#E5484D]/15 text-[#E5484D] border border-[#E5484D]/30">
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#DC2626]/15 text-[#DC2626] border border-[#DC2626]/30">
                                 {task.speed_restriction}
                               </span>
                             )}
                             {task.power_isolation && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#F5A623]/15 text-[#F5A623] border border-[#F5A623]/30">
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#FF6B35]/15 text-[#FF6B35] border border-[#FF6B35]/30">
                                 25kV Isolated
                               </span>
                             )}
                             {task.signal_disconnection && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#8E4EC6]/15 text-[#8E4EC6] border border-[#8E4EC6]/30">
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#7C3AED]/15 text-[#7C3AED] border border-[#7C3AED]/30">
                                 SI-420 Memo
                               </span>
                             )}
@@ -531,7 +665,7 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                             <button
                               type="button"
                               onClick={() => updateSectorStatus(task.id, 'ASSIGNED', 'Quick-assigned by Admin')}
-                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#0070F3]/15 hover:bg-[#0070F3]/25 text-[#0070F3] transition-colors cursor-pointer"
+                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#1D4ED8]/15 hover:bg-[#1D4ED8]/25 text-[#1D4ED8] transition-colors cursor-pointer"
                             >
                               Dispatch →
                             </button>
@@ -541,7 +675,7 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                             <button
                               type="button"
                               onClick={() => updateSectorStatus(task.id, 'PERMIT_ISSUED', 'Line block permit granted')}
-                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#F5A623]/15 hover:bg-[#F5A623]/25 text-[#F5A623] transition-colors cursor-pointer"
+                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#FF6B35]/15 hover:bg-[#FF6B35]/25 text-[#FF6B35] transition-colors cursor-pointer"
                             >
                               Grant Block →
                             </button>
@@ -551,7 +685,7 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                             <button
                               type="button"
                               onClick={() => updateSectorStatus(task.id, 'IN_PROGRESS', 'Work started on track')}
-                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#E5484D]/15 hover:bg-[#E5484D]/25 text-[#E5484D] transition-colors cursor-pointer"
+                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#DC2626]/15 hover:bg-[#DC2626]/25 text-[#DC2626] transition-colors cursor-pointer"
                             >
                               Start Track Work →
                             </button>
@@ -561,14 +695,14 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                             <button
                               type="button"
                               onClick={() => updateSectorStatus(task.id, 'FIT_CERTIFIED', 'Track fit certificate signed')}
-                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#30A46C]/15 hover:bg-[#30A46C]/25 text-[#30A46C] transition-colors cursor-pointer"
+                              className="px-2 py-1 rounded-[5px] text-[10px] font-semibold bg-[#15803D]/15 hover:bg-[#15803D]/25 text-[#15803D] transition-colors cursor-pointer"
                             >
                               Certify Fit ✓
                             </button>
                           )}
 
                           {stage.id === 'FIT_CERTIFIED' && (
-                            <span className="text-[10px] font-mono text-[#30A46C] font-semibold flex items-center gap-0.5">
+                            <span className="text-[10px] font-mono text-[#15803D] font-semibold flex items-center gap-0.5">
                               <CheckCircle2 size={12} /> Fit
                             </span>
                           )}
@@ -578,6 +712,39 @@ export const SectorAssignmentView: React.FC<SectorAssignmentViewProps> = ({
                   })
                 )}
               </div>
+
+              {/* Pagination Controls for long lists like Assigned */}
+              {list.length > currentLimit && (
+                <div className="pt-2 border-t border-[var(--border)] space-y-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setColumnLimits((prev) => ({
+                        ...prev,
+                        [stage.id]: (prev[stage.id] ?? defaultLimit) + 10
+                      }))
+                    }
+                    className="w-full py-1.5 px-2 rounded-[6px] text-[11px] font-mono font-medium bg-[var(--surface-hover)] hover:bg-[var(--border)] text-[var(--fg)] border border-[var(--border)] transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <span>Load 10 More ({list.length - currentLimit} remaining)</span>
+                    <ChevronDown size={12} />
+                  </button>
+                </div>
+              )}
+              {currentLimit > defaultLimit && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setColumnLimits((prev) => ({
+                      ...prev,
+                      [stage.id]: defaultLimit
+                    }))
+                  }
+                  className="w-full py-1 text-[10px] font-mono text-[var(--fg-subtle)] hover:text-[#FF6B35] text-center cursor-pointer"
+                >
+                  Collapse back to {defaultLimit}
+                </button>
+              )}
             </div>
           );
         })}

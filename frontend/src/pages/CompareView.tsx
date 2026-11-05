@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLineData } from '../context/LineContext';
 import { ComparisonMetric } from '../types/railblock';
-import { GitCompare, TrendingUp, BarChart2, ShieldCheck, Zap } from 'lucide-react';
+import { GitCompare, TrendingUp, BarChart2, ShieldCheck, Zap, Download } from 'lucide-react';
 
 export const CompareView: React.FC = () => {
   const { tasks, conflicts } = useLineData();
@@ -35,6 +35,36 @@ export const CompareView: React.FC = () => {
     { day: 'Sun', baseline: 69, optimized: 86 }
   ];
 
+  const handleExportCSV = () => {
+    const rows = [
+      ['RailBlock AI — Schedule Comparison Benchmark Report'],
+      ['Generated At', new Date().toISOString()],
+      ['Baseline Plan', baselinePlan],
+      ['Optimized Plan', optimizedPlan],
+      [],
+      ['Core Performance Benchmarks'],
+      ['Metric', 'Baseline', 'Optimized', 'Change'],
+      ...MOCK_COMPARE_METRICS.map(m => [m.metric, String(m.baseline), String(m.optimized), m.change]),
+      [],
+      ['Department Track Downtime (Hours)'],
+      ['Department', 'Baseline (Hrs)', 'Optimized (Hrs)'],
+      ...deptDowntime.map(d => [d.dept, String(d.baseline), String(d.optimized)]),
+      [],
+      ['Daily Track Utilization (%)'],
+      ['Day', 'Baseline (%)', 'Optimized (%)'],
+      ...dailyUtil.map(u => [u.day, String(u.baseline), String(u.optimized)])
+    ];
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(r => r.join(',')).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `railblock_comparison_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Header with 'vs' plan selectors */}
@@ -48,25 +78,37 @@ export const CompareView: React.FC = () => {
           </p>
         </div>
 
-        {/* 'vs' Layout */}
-        <div className="flex items-center gap-2 p-1.5 rounded-[8px] bg-[var(--surface)] border border-[var(--border)] text-xs">
-          <select
-            value={baselinePlan}
-            onChange={(e) => setBaselinePlan(e.target.value)}
-            className="h-8 px-2.5 rounded-[4px] bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] outline-none"
+        {/* 'vs' Layout & Export Button */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 p-1.5 rounded-[8px] bg-[var(--surface)] border border-[var(--border)] text-xs">
+            <select
+              value={baselinePlan}
+              onChange={(e) => setBaselinePlan(e.target.value)}
+              className="h-8 px-2.5 rounded-[4px] bg-[var(--bg)] border border-[var(--border)] text-[var(--fg)] outline-none"
+            >
+              <option>Manual Section Controller Draft</option>
+              <option>Baseline Week 42 Schedule</option>
+            </select>
+            <span className="font-mono font-bold text-[var(--fg-subtle)] px-1">VS</span>
+            <select
+              value={optimizedPlan}
+              onChange={(e) => setOptimizedPlan(e.target.value)}
+              className="h-8 px-2.5 rounded-[4px] bg-[var(--surface-hover)] border border-[var(--border-strong)] text-[var(--fg)] font-medium outline-none"
+            >
+              <option>OR-Tools AI Optimized Schedule v2.4</option>
+              <option>Integrated Mega Block Plan</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            className="h-8 px-3 rounded-[6px] bg-[#FF6B35] hover:bg-[#E85923] text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            title="Download CSV benchmark diff report"
           >
-            <option>Manual Section Controller Draft</option>
-            <option>Baseline Week 42 Schedule</option>
-          </select>
-          <span className="font-mono font-bold text-[var(--fg-subtle)] px-1">VS</span>
-          <select
-            value={optimizedPlan}
-            onChange={(e) => setOptimizedPlan(e.target.value)}
-            className="h-8 px-2.5 rounded-[4px] bg-[var(--surface-hover)] border border-[var(--border-strong)] text-[var(--fg)] font-medium outline-none"
-          >
-            <option>OR-Tools AI Optimized Schedule v2.4</option>
-            <option>Integrated Mega Block Plan</option>
-          </select>
+            <Download size={13} />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 
