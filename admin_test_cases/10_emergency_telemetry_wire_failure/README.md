@@ -15,3 +15,4 @@
    * Degrades signal aspect to `YELLOW`
    * Appends emergency event to the live telemetry stream
 4. Test train delay simulation via `/api/realtime/trigger-delay` and verify reschedule prompt generation.
+

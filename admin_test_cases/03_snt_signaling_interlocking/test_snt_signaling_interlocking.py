@@ -74,3 +74,4 @@ def test_snt_task_submission_and_signal_disconnection(db_session):
     assert list_res.status_code == 200
     tasks = list_res.json()
     assert any(t["id"] == task_data["id"] for t in tasks)
+

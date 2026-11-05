@@ -14,3 +14,4 @@
 2. Validate that the Fast Dynamic Heuristic completes execution in $< 50\text{ms}$ for real-time incident response.
 3. Validate that safety buffer constraints (15 minutes) prevent block boundary overlaps.
 4. Ensure Pareto analysis returns computed trade-offs (e.g. `aggregate_safety_score`, `total_detention_penalty_minutes`, `crew_utilization_efficiency`).
+

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { Shell } from './layouts/Shell';
 import { useLine, matchesLine } from './context/LineContext';
@@ -25,8 +25,16 @@ import { useAuth } from './context/AuthContext';
 
 export const App: React.FC = () => {
   const { role, isAdmin, isUser, switchRole } = useAuth();
-  const [currentTab, setCurrentTab] = useState<string>(() => (localStorage.getItem('railblock_user_role') === 'USER' ? 'live-viewer' : 'dashboard'));
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab && tab !== 'login') return tab;
+    return localStorage.getItem('railblock_user_role') === 'USER' ? 'live-viewer' : 'dashboard';
+  });
+  const [isLoginOpen, setIsLoginOpen] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') === 'login';
+  });
   const {
     selectedLine,
     tasks,
@@ -52,7 +60,10 @@ export const App: React.FC = () => {
   const [selectedSlotTask, setSelectedSlotTask] = useState<MaintenanceTaskItem | null>(null);
   const [selectedAssignTask, setSelectedAssignTask] = useState<MaintenanceTaskItem | null>(null);
   const [selectedConflict, setSelectedConflict] = useState<ConflictItem | null>(null);
-  const [isNewTaskOpen, setIsNewTaskOpen] = useState(false);
+  const [isNewTaskOpen, setIsNewTaskOpen] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('modal') === 'new-task';
+  });
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Optimizer solver state

@@ -14,3 +14,4 @@
    * Window boundary breaches
 3. Verify that `/api/schedules/{plan_id}/comparison` benchmarks the plan against a FIFO baseline heuristic.
 4. Ensure conflict details include train IDs, section names, and risk severity ratings.
+

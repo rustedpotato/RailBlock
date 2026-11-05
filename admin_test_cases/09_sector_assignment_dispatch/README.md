@@ -15,3 +15,4 @@
    * Direct `wa.me` quick-dispatch link
 3. Verify that 1-tap supervisor action links (`ACK`, `FIT`) record properly into the dispatch log (`/api/dispatch/log`).
 4. Ensure field hotline numbers and sensitive substation codes can be securely encrypted.
+

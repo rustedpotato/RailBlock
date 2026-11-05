@@ -11,3 +11,4 @@
 2. Validate that TRD assets (`OHE_SEGMENT`, `SUBSTATION`, `NEUTRAL_SECTION`) carry electrical safety criticality and require shadow bundling.
 3. Validate that TRD tasks are queryable via department filtering (`TRACTION_DISTRIBUTION`).
 4. Ensure power block duration constraints (e.g. 120-minute de-energized possession) are validated against feeder boundaries.
+

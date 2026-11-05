@@ -74,3 +74,4 @@ def test_trd_power_block_task_submission(db_session):
     assert list_res.status_code == 200
     tasks = list_res.json()
     assert any(t["id"] == data["id"] for t in tasks)
+

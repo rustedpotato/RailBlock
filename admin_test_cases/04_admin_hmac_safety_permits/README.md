@@ -10,3 +10,4 @@
 2. Verify in-app verification API (`/api/security/verify-seal`) returns valid cryptographic provenance when metadata matches.
 3. Verify anti-tamper rejection: modifying supervisor name, timestamp, or corridor must immediately return `valid: false` and detect forgery.
 4. Verify overall system security status endpoint (`/api/security/status`).
+

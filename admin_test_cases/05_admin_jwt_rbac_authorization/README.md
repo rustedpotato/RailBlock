@@ -10,3 +10,4 @@
 2. Verify that the Admin token successfully authorizes access to protected endpoints requiring `require_admin` (e.g. `/api/security/seal-permit`).
 3. Verify that non-admin tokens (e.g. `COMMUTER_VIEWER`, `SECTION_CONTROLLER` without admin rights) are rejected with HTTP 403 Forbidden on admin-only routes.
 4. Verify rejection of expired or malformed tokens.
+

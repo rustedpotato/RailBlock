@@ -11,3 +11,4 @@
 2. Verify that S&T assets (`ELECTRONIC_INTERLOCKING`, `POINT_MACHINE`, `SIGNAL_POST`, `AXLE_COUNTER`) carry strict safety fail-safe ratings (criticality = 5).
 3. Validate that S&T tasks are properly isolated and tagged under `SIGNAL_TELECOMMUNICATION`.
 4. Ensure the system enforces earliest start and completion deadlines to prevent lingering signal disconnects.
+
