@@ -47,11 +47,20 @@ class Settings(BaseSettings):
     RELOAD: bool = True
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=[str(BACKEND_DIR / ".env"), ".env"],
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"
     )
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def resolve_sqlite_path(cls, v: str) -> str:
+        if isinstance(v, str) and v.startswith("sqlite:///") and "./" in v:
+            relative_part = v.replace("sqlite:///", "").replace("./", "")
+            resolved = (BACKEND_DIR / relative_part).resolve().as_posix()
+            return f"sqlite:///{resolved}"
+        return v
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
