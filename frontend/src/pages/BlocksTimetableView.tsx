@@ -46,7 +46,7 @@ export const BlocksTimetableView: React.FC = () => {
                 section: 'Kalyan – Kasara Up',
                 start_time: '02:00',
                 end_time: '05:00',
-                date: '2026-10-23',
+                date: new Date().toISOString().split('T')[0],
                 type: 'NIGHT',
                 capacity_minutes: 180,
                 utilized_minutes: 0,

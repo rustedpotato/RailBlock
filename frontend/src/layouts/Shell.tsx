@@ -32,6 +32,7 @@ import {
 import { useLine } from '../context/LineContext';
 import { useAuth } from '../context/AuthContext';
 import { LINES, getLine, LineId } from '../data/lines';
+import { useRealtimeDate } from '../utils';
 
 interface ShellProps {
   currentTab: string;
@@ -53,6 +54,7 @@ export const Shell: React.FC<ShellProps> = ({
   children
 }) => {
   const { theme, setTheme } = useTheme();
+  const realtimeDate = useRealtimeDate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLineMenu, setShowLineMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -518,9 +520,11 @@ export const Shell: React.FC<ShellProps> = ({
 
           {/* Right: Date-range, Run Optimizer / Live Badge, Role Switch, Bell */}
           <div className="flex items-center gap-2.5">
-            <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono text-[var(--fg-muted)] px-2.5 py-1 rounded-[6px] border border-[var(--border)] bg-[var(--surface)]">
-              <Clock size={13} className="text-[#0070F3]" />
-              <span>19 – 25 Oct 2026</span>
+            <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono text-[var(--fg)] px-2.5 py-1 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] shadow-xs">
+              <Clock size={13} className="text-[#FF6B35]" />
+              <span className="font-semibold">{realtimeDate.weekRangeFull}</span>
+              <span className="text-[var(--fg-subtle)]">·</span>
+              <span className="text-[#0070F3] font-medium">{realtimeDate.currentTimeIST}</span>
             </div>
 
             {isAdmin ? (

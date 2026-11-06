@@ -10,3 +10,5 @@ export const formatDate = (isoString: string): string => {
     return isoString;
   }
 };
+
+export * from './dateUtils';

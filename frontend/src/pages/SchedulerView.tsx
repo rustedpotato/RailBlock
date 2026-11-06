@@ -28,6 +28,7 @@ import {
   UIC406SectionCapacity,
   ParetoOptimizationResult
 } from '../api/optimizerAndSecurity';
+import { useRealtimeDate } from '../utils';
 
 interface SchedulerViewProps {
   onSelectSlotTask: (task: MaintenanceTaskItem) => void;
@@ -40,6 +41,7 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({
   onRunOptimizer,
   solverStatus
 }) => {
+  const realtimeDate = useRealtimeDate();
   const [schedulerTab, setSchedulerTab] = useState<'timeline' | 'pareto' | 'capacity'>('timeline');
   const [zoom, setZoom] = useState<'day' | 'week' | 'month'>('day');
   const [respectTimetable, setRespectTimetable] = useState(true);
@@ -333,8 +335,9 @@ export const SchedulerView: React.FC<SchedulerViewProps> = ({
                 <span className="w-3 h-3 hatched-band rounded-[3px]" /> Block Window
               </span>
             </div>
-            <div className="font-mono text-[11px] text-[var(--accent)] font-medium">
-              Today: 20 Oct · Current Time 14:30 IST
+            <div className="font-mono text-[11px] text-[var(--accent)] font-medium flex items-center gap-1.5">
+              <Clock size={12} className="inline animate-spin" style={{ animationDuration: '6s' }} />
+              <span>Today: {realtimeDate.todayShort} · Current Time {realtimeDate.currentTimeIST}</span>
             </div>
           </div>
 

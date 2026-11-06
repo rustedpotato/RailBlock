@@ -10,6 +10,7 @@ import { MaintenanceTaskItem, ConflictItem } from '../types/railblock';
 import { AlertTriangle, ArrowRight, CheckCircle2, ShieldCheck, Clock, ChevronDown, ChevronUp, Zap, Sparkles } from 'lucide-react';
 
 import { LiveTelemetryMonitor } from '../components/ui/LiveTelemetryMonitor';
+import { useRealtimeDate } from '../utils';
 
 interface DashboardViewProps {
   onSelectTask: (task: MaintenanceTaskItem) => void;
@@ -24,6 +25,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const [timeRange, setTimeRange] = useState<'week' | 'month'>('week');
   const [showTelemetry, setShowTelemetry] = useState<boolean>(false);
+  const realtimeDate = useRealtimeDate();
   const { selectedLine } = useLine();
   const activeLine = getLine(selectedLine);
   const lineData = useLineData();
@@ -103,9 +105,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </span>
             )}
           </div>
-          <p className="text-[13px] text-[var(--fg-muted)] mt-1 font-mono">
-            Week 43 · 19 – 25 Oct 2026 · {activeLine ? `${activeLine.zone} (${activeLine.name})` : 'Mumbai Suburban Network (All Lines: Central · Western · Harbour)'}
-          </p>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap text-[12px] sm:text-[13px] text-[var(--fg-muted)] font-mono">
+            <span className="font-semibold text-[var(--fg)] px-2 py-0.5 rounded bg-[var(--surface-hover)] border border-[var(--border)]">
+              {realtimeDate.weekString}
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-medium text-[#FF6B35] px-2 py-0.5 rounded bg-[#FF6B35]/10 border border-[#FF6B35]/20">
+              <Clock size={12} className="inline animate-spin" style={{ animationDuration: '6s' }} />
+              <span>{realtimeDate.todayFormatted} · {realtimeDate.currentTimeIST}</span>
+            </span>
+            <span className="hidden md:inline text-[var(--fg-subtle)]">·</span>
+            <span className="hidden md:inline truncate">{activeLine ? `${activeLine.zone} (${activeLine.name})` : 'Mumbai Suburban Network (Central · Western · Harbour)'}</span>
+          </div>
         </div>
         <SegmentedControl
           value={timeRange}
@@ -252,8 +262,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span className="text-[13px] font-semibold text-[var(--fg)]">
               Schedule Timeline Preview (7-Day Multi-Department Gantt)
             </span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-[var(--surface-hover)] text-[var(--fg-muted)]">
-              19 – 25 Oct
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-[var(--surface-hover)] text-[var(--fg)] border border-[var(--border)] font-medium">
+              {realtimeDate.weekRangeShort}
             </span>
           </div>
           <Button size="sm" variant="ghost" onClick={() => onNavigateTab('scheduler')}>
@@ -265,14 +275,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="overflow-x-auto">
           <div className="min-w-[700px] border border-[var(--border)] rounded-[8px] bg-[var(--bg)] p-3 space-y-3">
             {/* Days Header */}
-            <div className="grid grid-cols-7 text-center font-mono text-[11px] text-[var(--fg-subtle)] pb-2 border-b border-[var(--border)]">
-              <div>Mon 19</div>
-              <div className="text-[var(--accent)] font-semibold">Tue 20 (Today)</div>
-              <div>Wed 21</div>
-              <div>Thu 22</div>
-              <div>Fri 23</div>
-              <div>Sat 24</div>
-              <div>Sun 25 (Mega)</div>
+            <div className="grid grid-cols-7 text-center font-mono text-[11px] text-[var(--fg-subtle)] pb-2 border-b border-[var(--border)] gap-1">
+              {realtimeDate.weekDays.map((d) => (
+                <div
+                  key={d.formatted}
+                  className={`py-1 rounded text-[11px] transition-colors ${
+                    d.isToday
+                      ? "text-[#FF6B35] font-bold bg-[#FF6B35]/15 border border-[#FF6B35]/30 shadow-xs"
+                      : d.isSunday
+                      ? "text-[#FF6B35] font-semibold bg-[var(--surface-hover)]"
+                      : "text-[var(--fg-muted)] hover:text-[var(--fg)]"
+                  }`}
+                >
+                  {d.formatted}
+                </div>
+              ))}
             </div>
 
             {/* Department Rows */}

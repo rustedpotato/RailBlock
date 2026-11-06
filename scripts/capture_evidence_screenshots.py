@@ -72,3 +72,4 @@ try:
     print(f"  ✓ Saved terminal output to {os.path.join(OUTPUT_DIR, 'terminal_pytest_output.txt')}")
 except Exception as e:
     print(f"Pytest failed: {e}")
+
